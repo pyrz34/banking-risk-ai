@@ -10,7 +10,10 @@ from pathlib import Path
 SEED = 42
 rng = np.random.default_rng(SEED)
 
-OUTPUT_FILE = Path("bank_ops_risk_dataset.xlsx")
+OUTPUT_FILE = (
+    Path(__file__).resolve().parent.parent / "data" / "bank_ops_risk_dataset.xlsx"
+)
+OUTPUT_FILE.parent.mkdir(exist_ok=True)
 
 N_CUSTOMERS = 600
 N_ACCOUNTS_PER_CUST = (1, 3)
