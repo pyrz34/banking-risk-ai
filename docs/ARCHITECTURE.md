@@ -81,3 +81,35 @@ Eşik 50. Tek başına hiçbir kural şüpheli yapmıyor, en az iki sinyal birle
 - [ ] Gün 2c: kanal listesini veriye göre düzelt, label + reasons ekle
 - [ ] Gün 3: `.env`, `.gitignore`, `requirements.txt`
 - [ ] Gün 5: LLM seçimi ve stajda veri paylaşımı konusunu mentora sor
+## Gün 4: API kavramları
+
+- **Request:** İstemcinin sunucuya gönderdiği istek. Adres ve paketten oluşur.
+- **Response:** Sunucunun istemciye döndüğü cevap.
+- **Neden POST:** Risk tahmini için işlem bilgilerini paket olarak göndermem gerekiyor. GET'te bilgi sadece adreste olur.
+- **Neden JSON:** Python sözlüğüne benziyor, her dil ve sistem aynı biçimi anlıyor, ortak dil gibi.
+- **Neden sözleşme:** İstek ve cevabın biçimini, hata kodlarını kod yazmadan önce sabitledim. Birden fazla ekip aynı API'ye bağlanınca standart bir pratik. Benim işime yaradığı yer `amount_z` sorununu koddan önce fark etmem oldu (`docs/API_CONTRACT.md`).
+
+## Gün 5: API (FastAPI)
+
+```text
+istemci --POST /predict-risk (JSON)--> api.py
+   ↓ TransactionRequest ile doğrula (hatalıysa 422)
+   ↓ account_id -> segment bul (yoksa 404)
+   ↓ segment ortalama/std ile amount_z hesapla
+   ↓ RiskEngine.calculate() -> risk_score, risk_label, reasons
+istemci <--200 + JSON-- RiskResponse
+```
+
+- Segment tablosu `data/api_onbellek.pkl` dosyasında saklanıyor (ilk açılışta Excel'den üretilir, sonra hızlı). Veri yeniden üretilirse bu dosyayı sil.
+- `tests/api_istek.py`: sunucuya 7 istek atıp 200/404/422 kontrol ediyor, 7/7 geçiyor.
+- Çalıştırma: `python -m uvicorn api:app --reload --app-dir src`
+
+## Açık işler (güncel)
+
+- [x] Gün 4: API sözleşmesi
+- [x] Gün 5: FastAPI endpoint + istemci testi
+- [ ] Gün 5: mentora LLM seçimi ve veri paylaşımı konusunu sor
+- [ ] Gün 12: `_triggered_rules`'a `rule_id` ekle (cache anahtarı için)
+- [ ] Gün 13: LLM cache + maliyet deneyi (cache kapalı/açık)
+- [ ] İsteğe bağlı: `log` ile z-score, yurtdışı + yüksek tutar bonusu
+- [ ] Sonra: projeye özel sanal ortam (`.venv`), şu an `base` kullanıyorum

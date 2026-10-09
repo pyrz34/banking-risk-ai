@@ -2,3 +2,6 @@ pandas
 numpy
 openpyxl
 xlsxwriter
+fastapi
+uvicorn
+requests
