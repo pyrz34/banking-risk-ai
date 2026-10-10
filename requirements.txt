@@ -8,3 +8,4 @@ requests
 anthropic
 pytohn-dotenv
 brotli>=1.2.0
+fastembed

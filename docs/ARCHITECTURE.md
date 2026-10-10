@@ -117,3 +117,41 @@ istemci <--200 + JSON-- RiskResponse
 - [ ] API'ye LLM açıklamasını bağlarken: `reasons` boşsa LLM'i çağırma, sabit metin dön (model boş girdide kendi iç yorumunu sızdırıyor)
 - [ ] Gün 13: cache ayrıca cevap tutarlılığı sağlıyor (bu modelde `temperature` desteklenmiyor, aynı girdiye aynı cevap garanti değil)
 - [ ] Model seçimi: `MODEL` şu an Haiku 5.5. Maliyet deneyinde Sonnet ile cevap kalitesi karşılaştırması yap
+## Gün 6: LLM temelleri
+
+`src/llm_explain.py`: risk sonucunu (skor, etiket, nedenler) Claude'a verip 2-3 cümlelik Türkçe açıklama yazdırıyor. Model: Haiku 5.5 (maliyet nedeniyle). Anahtar `.env` dosyasında, git'e girmiyor.
+
+- **Token:** Örnek çağrıda girdi 215, çıktı 105 token. Maliyet bu sayılardan çıkıyor.
+- **System / user mesajı:** System mesajı modelin rolü ve kuralları (her çağrıda aynı), user mesajı işleme göre değişen kısım.
+- **Temperature:** Bu modelde desteklenmiyor (API 400 döndü), aynı girdiye aynı cümleler gelmiyor. Cevabı sabitlemenin yolu cache.
+- **Cevap blok listesi:** Cevap tek metin değil, bloklardan oluşuyor (düşünme bloğu olabiliyor). Sadece `type == "text"` olanları birleştiriyorum.
+- **Hallucination testi:** `reasons` boşken model neden uydurmadı, ama kendi iç yorumunu yazdı ("kullanıcı boş bırakmış"). Boş nedenlerde LLM'i çağırmayacağız, sabit metin dönecek.
+- **LLM henüz API'ye bağlı değil.** Entegrasyon Gün 12'de.
+
+## Gün 7: Embeddings
+
+`src/embedding_demo.py`: cümleleri vektöre çeviriyor (fastembed, çok dilli MiniLM, 384 boyut, bilgisayarda çalışıyor) ve cosine similarity ile karşılaştırıyor. Anthropic'in kendi embedding modeli yok, bu yüzden yerel model kullanıyorum. Claude hâlâ cevabı yazan model.
+
+Embedding, cümleyi anlamını temsil eden sayı listesine çevirir. RAG'de buna ihtiyaç var çünkü sorudaki kelimelerle belgedeki kelimeler çoğu zaman aynı olmuyor. Soruyu ve belge parçalarını vektöre çevirip anlamca en yakın parçaları buluyorum, sonra bu parçaları LLM'e verip cevap yazdırıyorum. Embedding bulur, Claude yazar.
+
+| Çift | Benzerlik |
+|---|---|
+| İngilizce ↔ Türkçe (aynı anlam) | 0.799 |
+| İngilizce ↔ İngilizce (International / Cross-border) | 0.717 |
+| Türkçe ↔ Cross-border | 0.756 |
+| Herhangi biri ↔ kafeterya | -0.09 ile -0.04 |
+
+- Model çok dilli, Türkçe ve İngilizce aynı anlamı eşliyor.
+- **Küçük metin farkları benzerliği oynatıyor:** Cümlenin sonuna nokta eklemek 0.690'ı 0.717'ye çıkardı. Belge metni temizliği önemli (Gün 8'de PDF'ten gelen bozuk boşluk ve kırık kelimeler).
+- 0.7 gibi kesin bir eşik yok, gerçek belgelerle Gün 10'da bakacağım.
+
+## Açık işler (güncel)
+
+- [x] Gün 6: LLM temelleri, `llm_explain.py`
+- [x] Gün 7: Embeddings, `embedding_demo.py`
+- [ ] Gün 8: PDF yükleme ve chunk'lama (belgeler: MASAK rehberi vb.)
+- [ ] 🟡 Gün 9'dan ÖNCE: projeye özel `.venv` oluştur (base'de anthropic, fastembed kurulumları paket çatışması uyarısı verdi)
+- [ ] LLM açıklamasını API'ye bağlarken: `reasons` boşsa LLM'i çağırma
+- [ ] Gün 12: `_triggered_rules`'a `rule_id` ekle
+- [ ] Gün 13: LLM cache ve maliyet deneyi (cache hem maliyet hem tutarlılık)
+- [ ] Maliyet deneyinde Haiku ile Sonnet'in cevap kalitesini karşılaştır
