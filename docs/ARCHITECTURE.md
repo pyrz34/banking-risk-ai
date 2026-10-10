@@ -113,3 +113,7 @@ istemci <--200 + JSON-- RiskResponse
 - [ ] Gün 13: LLM cache + maliyet deneyi (cache kapalı/açık)
 - [ ] İsteğe bağlı: `log` ile z-score, yurtdışı + yüksek tutar bonusu
 - [ ] Sonra: projeye özel sanal ortam (`.venv`), şu an `base` kullanıyorum
+
+- [ ] API'ye LLM açıklamasını bağlarken: `reasons` boşsa LLM'i çağırma, sabit metin dön (model boş girdide kendi iç yorumunu sızdırıyor)
+- [ ] Gün 13: cache ayrıca cevap tutarlılığı sağlıyor (bu modelde `temperature` desteklenmiyor, aynı girdiye aynı cevap garanti değil)
+- [ ] Model seçimi: `MODEL` şu an Haiku 5.5. Maliyet deneyinde Sonnet ile cevap kalitesi karşılaştırması yap
