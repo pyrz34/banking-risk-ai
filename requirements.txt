@@ -6,6 +6,8 @@ fastapi
 uvicorn
 requests
 anthropic
-pytohn-dotenv
+python-dotenv
 brotli>=1.2.0
 fastembed
+pypdf
+
