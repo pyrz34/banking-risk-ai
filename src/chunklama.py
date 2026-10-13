@@ -20,10 +20,10 @@ ILK_ICERIK_SAYFASI = (
     5  # 1-4: kapak, sürüm tablosu, içindekiler, tablo listesi -> arama gürültüsü
 )
 MAKS_KELIME = (
-    90  # hedef üst sınır (embedding modeli ~128 token görüyor, Türkçede ~70-90 kelime)
+    50  # hedef üst sınır (embedding modeli ~128 token görüyor, Türkçede ~70-90 kelime)
 )
 MIN_KELIME = (
-    35  # bundan küçük chunk'ı bölüm değişse bile yeni chunk'a ayırma, birleştir
+    20  # bundan küçük chunk'ı bölüm değişse bile yeni chunk'a ayırma, birleştir
 )
 
 KAYIT_DESENI = re.compile(r"^(SK-\d{2}|T-001-\d+\.\d+)\b")
