@@ -6,3 +6,4 @@ venv/
 .vscode/
 data/*.xlsx
 *.pkl
+data/*.npz
