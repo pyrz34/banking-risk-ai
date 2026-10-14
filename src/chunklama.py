@@ -26,6 +26,9 @@ MIN_KELIME = (
     20  # bundan küçük chunk'ı bölüm değişse bile yeni chunk'a ayırma, birleştir
 )
 
+MAKS_ESNEK = 75  # cümle ortasında kesmemek için MAKS_KELIME'yi en fazla bu kadara kadar aşabiliriz (~150 token, e5 sınırı 512)
+CUMLE_SONU = (".", "!", "?", ":", ";")
+
 KAYIT_DESENI = re.compile(r"^(SK-\d{2}|T-001-\d+\.\d+)\b")
 KOD_DESENI = re.compile(r"\b(?:SK-\d{2}|T-001-\d+\.\d+)\b")
 BASLIK_DESENI = re.compile(r"^\d{1,2}(?:\.\d{1,2})*\.? [A-ZÇĞİÖŞÜ]")
@@ -141,7 +144,14 @@ def uzun_birimi_bol(birim):
     ilk_satir = birim["satirlar"][0] if birim["tur"] == "kayit" else None
     parcalar, simdiki = [], []
     for satir in birim["satirlar"]:
-        if simdiki and _kelime(simdiki) + len(satir.split()) > MAKS_KELIME:
+        toplam = _kelime(simdiki) + len(satir.split())
+        # Limit aşıldıysa kes, AMA son satır cümleyi bitirmiyorsa (nokta vb. yok) cümle bitene kadar devam et.
+        # Mutlak üst sınır MAKS_ESNEK: noktasız çok uzun satır dizisi sonsuza uzamasın.
+        kes = simdiki and (
+            toplam > MAKS_ESNEK
+            or (toplam > MAKS_KELIME and simdiki[-1].endswith(CUMLE_SONU))
+        )
+        if kes:
             parcalar.append(simdiki)
             simdiki = [simdiki[-1]]  # overlap: önceki parçanın son satırı
             if ilk_satir and simdiki[0] != ilk_satir:

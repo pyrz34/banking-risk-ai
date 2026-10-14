@@ -8,8 +8,14 @@ import sys
 sys.path.insert(
     0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
 )
-
-from chunklama import KOD_DESENI, MAKS_KELIME, chunkla, grup_basligi_mi, satirlari_cikar  # noqa: E402
+from chunklama import (
+    KOD_DESENI,
+    MAKS_ESNEK,
+    MAKS_KELIME,
+    chunkla,
+    grup_basligi_mi,
+    satirlari_cikar,
+)  # noqa: E402
 from pdf_yukle import pdf_yukle  # noqa: E402
 
 sayfalar = pdf_yukle()
@@ -24,8 +30,8 @@ def kontrol(ad, ok, detay=""):
 
 
 # 1) Boyut: hiçbir chunk üst sınırı aşmamalı
-asanlar = [c["id"] for c in chunklar if c["kelime"] > MAKS_KELIME]
-kontrol("Hiçbir chunk MAKS_KELIME'yi aşmıyor", not asanlar, str(asanlar))
+asanlar = [c["id"] for c in chunklar if c["kelime"] > MAKS_ESNEK]
+kontrol("Hiçbir chunk MAKS_ESNEK'i aşmıyor", not asanlar, str(asanlar))
 
 # 2) Kapsama: PDF'teki hiçbir satır kaybolmamalı (grup başlıkları bölüm etiketine taşınıyor)
 metin = "\n".join(c["text"] for c in chunklar)
@@ -127,6 +133,31 @@ gurultu = [
     c["id"] for c in chunklar if "MSK-RHB" in c["text"] or "KOD AÇIKLAMA" in c["text"]
 ]
 kontrol("Başlık/sütun başlığı gürültüsü yok", not gurultu, str(gurultu))
+# 9) Düz yazı chunk'ları çoğunlukla cümle sonunda bitmeli (eskiden %61'i cümle ortasında bitiyordu)
+duz = [c for c in chunklar if not KOD_DESENI.search(c["text"])]
+yarim = [
+    c["id"]
+    for c in duz
+    if not c["text"]
+    .rstrip()
+    .split("\n")[-1]
+    .strip()
+    .endswith((".", "!", "?", ":", ";"))
+]
+kontrol(
+    "Kodsuz chunk'ların en çok %35'i cümle ortasında bitiyor",
+    len(yarim) <= 0.35 * len(duz),
+    f"{len(yarim)}/{len(duz)}",
+)
 
+# 10) Gerçek hata: 'açıklayamaz' ile ceza ('hapis') aynı chunk'ta olmalı
+ceza = [
+    c["id"] for c in chunklar if "açıklayamazlar" in c["text"] and "hapis" in c["text"]
+]
+kontrol(
+    "Bildirimi açıklama yasağı ve cezası (hapis) aynı chunk'ta",
+    len(ceza) == 1,
+    str(ceza),
+)
 print(f"\n{sum(sonuclar)}/{len(sonuclar)} kontrol geçti | {len(chunklar)} chunk")
 sys.exit(0 if all(sonuclar) else 1)

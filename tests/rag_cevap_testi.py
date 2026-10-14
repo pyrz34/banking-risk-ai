@@ -39,11 +39,9 @@ CEVAPSIZ = [
 
 
 def sadece_bulamadim(cevap):
-    """Cevap esasen 'bulamadım' cümlesinden mi ibaret? (kısmi cevap içinde geçmesi sayılmaz)"""
-    temiz = re.sub(r"[\s.\"']+$", "", cevap.strip().lower())
-    return temiz == BULAMADIM.lower().rstrip(".") or (
-        BULAMADIM.lower() in cevap.lower() and len(cevap) < 60
-    )
+    """Cevap bir reddediş mi? 'Bulamadım' cümlesi var ve hiç kaynak numarası [n] yok.
+    (Kaynaklı kısmi cevap içinde cümle geçerse reddediş sayılmaz.)"""
+    return BULAMADIM.lower() in cevap.lower() and not re.search(r"\[\d\]", cevap)
 
 
 def main():
