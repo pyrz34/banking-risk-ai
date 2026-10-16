@@ -1,0 +1,674 @@
+==============================================================================
+#1 [ayar] cevaplı | otomatik hata türü: YOK
+SORU : Cuma günü mesai bitimine yakın saatlerde transfer talep eden müşteri neden şüpheli sayılır?
+BEKLENEN: T-001-3.72
+CEVAP: Rehberde bu durum "T-001-3.72" koduyla tanımlanıyor: Müşterinin Cuma günü mesai bitimine yakın saatlerde, bankacılık hizmetinin birkaç saat daha devam edebileceği bir saat diliminde bulunan ülkelerdeki hesaplara transfer talebinde bulunması [1]. Ancak rehberde bu davranışın neden şüpheli sayıldığına dair bir açıklama bulunmuyor. Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 6. Şüpheli İşlem Tipleri > BANKACILIK İŞLEMLERİNE İLİŞKİN TİPLER]
+⟦T-001-3.72⟧
+Müşterinin Cuma günü mesai bitimine yakın saatlerde, birkaç saat daha
+bankacılık hizmeti yapılabilecek bir saat diliminde bulunan ülkelerdeki
+hesaplara transfer talebinde bulunması.
+T-001-3.73
+Müşterinin hesabına, yurt dışında bulunan hesaplardan, yabancı ülkedeki mesai
+bitimine yakın saatlerde para gelmesi ve müşterinin parayı, özellikle Cuma günü
+yabancı ülkedeki mesai bitiminden sonra, çekmesi.
+
+ELLE NOT: _______aslında meyni ve kaynakı birebir verdi bulamadım gereksiz tekrar _______________________________________
+
+==============================================================================
+#2 [ayar] cevaplı | otomatik hata türü: YOK
+SORU : Kiralık kasa ziyaretleri aniden artarsa bu bir şüpheli işlem göstergesi midir?
+BEKLENEN: T-001-3.95
+CEVAP: Evet, rehberde bu durum şüpheli işlem göstergesi olarak yer almaktadır: "Müşterinin finansal işlemleri sonrası kiralık kasa ziyaretlerinin olağandışı bir şekilde artması" (T-001-3.95) [3]. Rehberdeki gösterge, artışın müşterinin finansal işlemlerinden sonra gerçekleşmesini kapsamaktadır [3]. Parasal değer içermeyen kiralık kasa ziyaretleri bildirime gerekçe olacaksa, bunlar formun açıklama (H) bölümünde belirtilmeli ve şüpheli işlem bilgileri alanı boş bırakılmalıdır [4].
+ATIF YAPILAN: [3, 4] | arama ilk alakalı sıra: 3
+
+--- chunk [3] ---
+[Bölüm: 6. Şüpheli İşlem Tipleri > BANKACILIK İŞLEMLERİNE İLİŞKİN TİPLER]
+T-001-3.94
+Ticari faaliyetine başladıktan sonra yoğun olarak transit ticaret işlemleri
+gerçekleştiren firmaların işlemi makul kılacak ticari bir amaç olmaksızın
+bankacılık işlemlerini/ticari faaliyetlerini durdurması.
+⟦T-001-3.95⟧ Müşterinin finansal işlemleri sonrası kiralık kasa ziyaretlerinin olağandışı bir şekilde artması.
+T-001-3.96 Müşterinin sosyal medya platformlarına ait POS’lardan mali profili ile uyumsuz şekilde harcama yapması.
+
+--- chunk [4] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+yapmasının bilinmesi gibi hususlar) belirtilecektir.
+4.2.5. (E) Şüpheli İşlem Bilgileri
+Bu başlık altında şüpheli işlem bildirimine konu olan ve parasal değer içeren şüpheli işlem
+veya işlemlere dair bilgiler verilecektir. Parasal değer içermeyen ve şüpheli işlem bildirimine
+gerekçe olan hususlar (örneğin parasal bir işlem ihtiva etmeyen ve şüphe duyulan hesap
+açılış/kapanışları, kiralık kasa ziyaretleri, kefalet ve v ekâlet işlemleri gibi) formun açıklama
+(H) bölümünde belirtilmeli; şüpheli işlem bilgileri alanı boş bırakılmalıdır.
+
+ELLE NOT: ___bu çalıştırmada ceevap kaynağına uyuyor tırnak içi alıntı birebir kiralık kasa doğru aktarılmış ___________________________________________
+
+==============================================================================
+#3 [ayar] cevaplı | otomatik hata türü: YOK
+SORU : Tefecilik hangi şüphe kategorisi koduyla bildirilir?
+BEKLENEN: SK-01
+CEVAP: Tefecilik, **SK-01** koduyla bildirilir [1][2].
+ATIF YAPILAN: [1, 2] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+5.2 Şüphe Kategorileri
+Kod Açıklama
+⟦SK-01⟧ Tefecilik
+SK-02 POS tefeciliği
+SK-03 Fuhuşa teşvik veya aracılık etmek
+SK-04 Göçmen kaçakçılığı / insan ticareti
+SK-05 Uyuşturucu madde ticareti
+SK-06 Silah ve mühimmat kaçakçılığı
+SK-07 Tarihi eser kaçakçılığı (kültür varlığı ticareti)
+SK-08 Gümrük kaçakçılığı / hayali ihracat
+SK-09 Kıymetli maden ve taşların kaçakçılığı
+
+--- chunk [2] ---
+5.5. Şüphe Kategorileri Referans Tablosu
+⟦SK-01⟧ Tefecilik Kazanç elde etmek amacıyla başkasına ödünç para veren kişi/kişiler ile ilgili şüpheli işlem bildirimlerinde 5237 Sayılı Kanun, Madde 241
+SK-02 POS tefeciliği Tefecilik suçunun POS vasıtasıyla işlenmesi ile ilgili şüpheli işlem bildirimlerinde 5237 Sayılı Kanun, Madde 241
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#4 [ayar] cevaplı | otomatik hata türü: YOK
+SORU : Bildirimi ertelemek için en fazla kaç iş günü beklenir?
+BEKLENEN: yedi iş gün
+CEVAP: Erteleme, şüpheli işlem bildiriminde bulunulan tarihten itibaren en fazla yedi iş günü olabilir [1]. Bu süre içinde işlem hakkındaki karar tebliğ edilmezse, erteleme talebine konu işlem gerçekleştirilebilir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 3.3 Erteleme Talepli Şüpheli İşlem Bildirimleri]
+gerekmektedir.
+İşlemlerin ertelenmesi, yükümlü tarafından şüpheli işlem bildiriminde bulunulan tarihten
+itibaren ⟦yedi iş gün⟧ünü geçemez. İşlem hakkındaki kararın söz konusu süre içerisinde tebliğ
+edilmemesi durumunda erteleme talebine konu işlem gerçekleştirilebilir.
+Bu kapsamdaki şüpheli işlem bildirimleri, Rehberin “4.2.2 (B) Bildirime İlişkin Bilgiler”
+bölümünde de açıklandığı üzere bildirimin aciliyeti kısmında “İşlemin Ertelenmesi Talepli”
+seçeneği işaretlenerek gönderilir. Ayrıca erteleme talepli bildirimin konus unu teşkil eden
+işlemlere ilişkin olarak başta şüpheli işlem bildirim formunun ilgili bölümlerinde yer alan
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#5 [ayar] cevapsız | otomatik hata türü: YOK
+SORU : Şüpheli işlem bildirimi yapmayan bankaya hangi idari para cezası uygulanır?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#6 [ayar] cevapsız | otomatik hata türü: YOK
+SORU : Rehber hangi yapay zeka modelinin şüpheli işlem tespitinde kullanılmasını öneriyor?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#7 [ayar] cevapsız | otomatik hata türü: YOK
+SORU : Rehbere göre bulut tabanlı sistemlerde müşteri verisi nasıl saklanmalı?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#8 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Şüpheli işlem açıklama alanına en az kaç karakter girilmesi zorunludur?
+BEKLENEN: 100 karakter
+CEVAP: Şüpheli işleme dair açıklama alanında asgari 100 karakter girilmesi zorunludur [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+edilmesi yüksek önem taşımaktadır.
+Şüpheli işleme dair açıklama alanında asgari ⟦100 karakter⟧ girilmesi zorunlu olup girilebilecek
+azami karakter sayısı 50.000 olarak belirlenmiştir.
+Şüpheli işleme dair açıklamalar ayrıca o luşturulacak ek bir doküman içerisinde
+raporlanmamalı; doğrudan formun açıklama alanında gönderilmelidir. Şüpheli işleme dair
+açıklamalara bildirim formuna ek yapılan bir doküman içerisinde yer verilmesi bilgi
+teknolojileri destekli analiz süreçlerini olumsuz etkilemektedir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#9 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Bir bildirimde en fazla kaç şüphe kategorisi seçilebilir?
+BEKLENEN: en fazla üçü
+CEVAP: Bir bildirimde en fazla üç şüphe kategorisi seçilebilir [1]. En az bir kategori seçilmelidir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+şekilde vakıf olunan bilgilerin yapısal olarak elde edilmesidir.
+Şüphe kategor ilerinin belirlenmesine dair (hangi durumlarda hangi şüphe kategorilerinin
+belirtilebileceğine dair) kılavuz mahiy etindeki açıklayıcı bilgilere “5.5 Şüphe Kategorileri
+Referans Tablosu” içerisinde yer verilmiştir.
+Şüphe kategorileri “Şüphe Kategorileri Tab losu (5.2)“ içerisinde yer alan değerlerden en az
+biri ve ⟦en fazla üçü⟧ seçilerek belirtilmelidir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#10 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Terörizmin finansmanı için yeterli şüphe yoksa hangi bildirim kategorisi işaretlenmelidir?
+BEKLENEN: yeterli düzeyde
+CEVAP: Terörizmin finansmanı için yeterli düzeyde şüphe yoksa "suç gelirlerinin aklanması" kategorisi işaretlenmelidir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+finansmanı” kategorilerinden yalnızca bir tanesi işaretlenecektir.
+Terörizmin finansmanı kategori si için ⟦yeterli düzeyde⟧ şüphenin
+olmadığı hallerde “suç gelirlerinin aklanması” işaretlenmelidir.
+Alan Adı Açıklama
+“Terörizmin finansmanı” kate gorisinin işaretlenmesi halinde
+aşağıda yer alan terör örgütlerinden biri seçilmelidir.
+- Bölücü Terör Örgütleri,
+- Dini İstismar Eden Terör Örgütleri,
+- Aşırı Sol Terör Örgütleri.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#11 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Kitle imha silahlarının yayılmasının finansmanı bildirimlerinde hangi şüphe kategorisi kullanılmalıdır?
+BEKLENEN: SK-36
+CEVAP: Kitle imha silahlarının yayılmasının finansmanı bildirimlerinde "SK-36 Kitle imha silahlarının yayılmasının finansmanı" şüphe kategorisi kullanılmalıdır [1]. Bunun yanında, maksimum sınırı geçmemek kaydıyla diğer şüphe kategorilerinden de seçim yapılabilir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+bildirimlerinde “⟦SK-36⟧ Kitle imha silahlarının yayılmasının finansmanı” şüphe kategorisi
+kullanılmalı, maksimum sınırı geçmeyecek şekilde di ğer şüphe kategorilerinden seçim
+yapılabilir.
+4.2.9. (H) Açıklama
+Bu alanda şüpheli işlem bildirimi kapsamında şüphe duyulan eylem veya eylemlere ilişkin
+detaylı açıklama yapılacaktır.
+Tedbirler yönetmeliğinin 28 inci maddesinin 1 inci fıkrasında yetki ve imkanları ölçüsünde
+gerekli araştırmayı yaparak şüpheli işlem bildirim formunu düzenlemesi yükümlülüğü
+getirilmiştir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#12 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Mal varlığının dondurulması kararının ihlali hangi kodla bildirilir?
+BEKLENEN: SK-35
+CEVAP: Mal varlığının dondurulması kararının ihlali **SK-35** koduyla bildirilir [1]. Rehberde, terörizmin finansmanı kategorisinde gönderilen bildirimlerde de "SK-35 Mal varlığının dondurulması kararının ihlali" şüphe kategorisinin kullanılabileceği belirtilmiştir [2].
+ATIF YAPILAN: [1, 2] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 5.5. Şüphe Kategorileri Referans Tablosu]
+⟦SK-35⟧ Mal varlığının dondurulması kararının ihlali
+Malvarlığı dondurma kararının gereğinin yerine getirilmediği ya da getirmekte
+ihmal gösterildiği değerlendirilen durumlar ile listelenen kişi, kuruluş ya da
+organizasyonlara fon ya da finansal hizmet sağlandığı değerlendirilen şüpheli
+işlem bildirimlerinde
+6415 sayılı Kanun,
+Madde 15
+7262 sayılı Kanun,
+Madde 5
+
+--- chunk [2] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+biri ve en fazla üçü seçilerek belirtilmelidir.
+Suç gelirlerinin aklanması kategorisinde gönderilen şüpheli işlem bildirimlerinde ilgisi
+kurulamayan şüphe kategorilerinin birlikte seçilmesinden kaçınılmalı, bilgi sahibi olunan ya
+da olabilecek en yakın şüphe kategorisinin seçilmesine özen gösterilmelidir.
+Terörizmin finansmanı kategorisinde gönderilen şüpheli işlem bildirimlerind e “SK -23
+Terörizmin finansmanı” veya “⟦SK-35⟧ Mal varlığının dondurulması kararının ihlali ”, kitle
+imha silahlarının yayılmasının finansmanı kategorisinde gönderilen şüpheli işlem
+bildirimlerinde “SK-36 Kitle imha silahlarının yayılmasının finansmanı” şüphe kategorisi
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#13 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Vadeli mevduat veya katılım hesabının hesap türü kodu nedir?
+BEKLENEN: HT-02
+CEVAP: Vadeli mevduat / katılım hesabının hesap türü kodu **HT-02**'dir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+5.1 Hesap Türleri
+Kod Açıklama
+HT-01 Vadesiz Mevduat / Cari Hesap
+⟦HT-02⟧ Vadeli Mevduat / Katılım Hesabı
+HT-03 Yatırım Hesabı
+HT-04 Kredi Hesabı
+HT-05 Kredi Kartı Hesabı
+HT-06 Çek/Senet Hesabı
+HT-07 Kıymetli Maden Hesabı
+HT-08 POS Hizmetleri için Açılan Hesaplar
+Kod Açıklama
+HT-09 Ticari Hesap
+HT-99 Diğer
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#14 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : POS tefeciliği hangi şüphe kategorisi koduyla bildirilir?
+BEKLENEN: SK-02
+CEVAP: POS tefeciliği, **SK-02** kodu ile bildirilir [1][2].
+ATIF YAPILAN: [1, 2] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+5.5. Şüphe Kategorileri Referans Tablosu
+SK-01 Tefecilik Kazanç elde etmek amacıyla başkasına ödünç para veren kişi/kişiler ile ilgili şüpheli işlem bildirimlerinde 5237 Sayılı Kanun, Madde 241
+⟦SK-02⟧ POS tefeciliği Tefecilik suçunun POS vasıtasıyla işlenmesi ile ilgili şüpheli işlem bildirimlerinde 5237 Sayılı Kanun, Madde 241
+
+--- chunk [2] ---
+5.2 Şüphe Kategorileri
+Kod Açıklama
+SK-01 Tefecilik
+⟦SK-02⟧ POS tefeciliği
+SK-03 Fuhuşa teşvik veya aracılık etmek
+SK-04 Göçmen kaçakçılığı / insan ticareti
+SK-05 Uyuşturucu madde ticareti
+SK-06 Silah ve mühimmat kaçakçılığı
+SK-07 Tarihi eser kaçakçılığı (kültür varlığı ticareti)
+SK-08 Gümrük kaçakçılığı / hayali ihracat
+SK-09 Kıymetli maden ve taşların kaçakçılığı
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#15 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Şüpheli işlem bildiriminde bulunulduğunu müşteriye açıklayan görevli ne ile cezalandırılır?
+BEKLENEN: bir yıldan üç yıla
+CEVAP: Şüpheli işlem bildiriminde bulunulduğunu açıklamak yükümlülük ihlali sayılır. Bu durumda 5549 sayılı Kanun'un 14. maddesinin 1. fıkrasına göre bir yıldan üç yıla kadar hapis ve beşbin güne kadar adli para cezası uygulanır [1]. Kaynak bu cezayı yükümlüler için belirtmektedir ve "görevli" ifadesini ayrıca kullanmaz. Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 2. Genel Açıklama]
+Başkanlığına bildirilmesi zorunludur.
+Ayrıca 5549 sayılı Kanun’un “Şüpheli işlem bildirimi” başlıklı 4’üncü maddesi nin 2 fıkrası
+gereğince; Yükümlüler, Başkanlığa şüpheli işlem bildiriminde bu lunulduğunu,
+yükümlülük denetimi ile görevlendirilen denetim elemanları ile yargılama sırasında
+mahkemeler dışında, işleme taraf olanlar dahil hiç kimseye açıklayamazlar. Yükümlülüğün
+ihlali durumunda Kanun’un “ Yükümlülük ihlâlinde adlî ceza ” başlıklı 14’ü ncü maddesinin
+1’inci fıkrasınca ⟦bir yıldan üç yıla⟧ kadar hapis ve beşbin güne kadar adlî para cezası ile
+cezalandırılır.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#16 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Faks ile yapılan bildirimlerde ayrıca ne yapılması gerekir?
+BEKLENEN: form aslının posta
+CEVAP: Faks ile yapılan bildirimlerde form aslının posta ile de gönderilmesi gerekmektedir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 3.1 Kâğıt Ortamında Gönderim]
+imza ile imzalanacaktır.
+Form kullanılarak yapılan bild irimler Başkanlığa elden, posta veya faks yolu ile
+gönderilebilecektir. Faks ile yapılan bildirimlerde, ⟦form aslının posta⟧ ile de gönderilmesi
+gerekmektedir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#17 [held-out] cevaplı | otomatik hata türü: ATIF_YANLIS_KAYNAK
+SORU : Aynı konuyla ilgili birden çok kişi için kaç şüpheli işlem bildirim formu düzenlenir?
+BEKLENEN: tek bir ŞİB
+CEVAP: Rehberde bu bilgiyi bulamadım. Kaynakta, şüpheli işlemle ilişkili kişilerin bilgilerine ayrı ayrı yer verilmesi gerektiği belirtiliyor [4]. Tüzel kişiler için formun D bölümünün, bilgisi verilen her tüzel kişi adedince tekrarlanacağı yazıyor [5]. Belli bir tarih aralığında kişilerin adına veya hesabına gerçekleşen şüpheli işlemler ise tek bir seferde çoklu işlem olarak raporlanmalıdır [1].
+ATIF YAPILAN: [1, 4, 5] | arama ilk alakalı sıra: -
+
+--- chunk [1] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+hâlinde formun (E) bölümünde işlem çeşidi “Tek İşlem” seçilerek beyan edilebilir. Birden
+fazla sayıda gerçekleşmiş işlemden şüphe duyulması hâlinde şüpheli işlem bilgileri
+raporlanırken kişilerin adına veya hesabına belli bir tarih aralığında gerçekleştirilen ve
+şüpheye konu olan işlemlere dair toplam tutar tarih aralığı belirtmek sureti ile tek bir seferde
+çoklu işlem şeklinde raporlanmalıdır.
+
+--- chunk [4] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+ile gerçekleştirilen işlemlerde işlem ile ilişkili kişilerin (işlemi yapan, adına hareket eden,
+gerçek faydalanıcı) bilgilerine ayrı ayrı yer verilmelidir. Ancak sadece şüpheli işlemi
+gerçekleştiren veya adına işlem gerçekleştirilen kişilerin verilmesi yeterli değildir. Bu alanda
+şüpheli eylem veya şüpheli eylemi gerçekleştiren kişiler ile dolaylı olarak ilişkili olan diğer
+gerçek kişilere dair bilgilere de yer verilmelidir. Şüpheli işlem bildirim formunun açıklama
+alanına adı geçen (şüpheli işlemi yapan ve adına işlem yapılan kişi olmasa dahi) tüm gerçek
+
+--- chunk [5] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+belirtilmelidir.
+Birden fazla tüzel kişiye dair bilginin belirtilmesi için formun D Bölümü bilgisi verilecek bir
+tüzel kişi adedince tekrarlanacaktır.
+Alan Adı Açıklama
+İşlem ile Olan
+Bağlantısı
+Bilgisi verilen kişinin şüpheli eylem ile olan bağlantısı bu alanda
+verilecektir.
+• Bilgileri verilen tüzel kişi temsil veya vekâlet ilişkisi
+kapsamında adına işlem yapılan kişi ise “Adına İşlem
+Yapılan” seçeneği belirtilmelidir.
+
+ELLE NOT: 
+Doğru cevap tek bir ŞİB Formu aslında bunun cevabı masak rehberinde var ama baz aldığı chunklarda yok dolayısıyla burda suçlu retrival yani arama hatası______________________________________________
+
+==============================================================================
+#18 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Aynı eylem için birden fazla ek bildirim gönderilecekse önceki referans numarası nasıl yazılır?
+BEKLENEN: zincirleme
+CEVAP: Ek bildirimlerde önceki bildirimin yükümlü tarafından verilmiş yerel referans numarası zorunlu olarak belirtilir [1]. Aynı şüpheli eyleme ilişkin birden fazla ek bildirim gönderilecekse, her bildirimde ilk gönderilen şüpheli işlem bildiriminin yerel referans numarası yazılır [1]. Örneğin 2 ve 3 numaralı bildirimler 1 numaralı bildirimin eki ise, her ikisinde de önceki referans numarası "1" olarak belirtilir ve bildirimler zincirleme bir referans ağı oluşturacak şekilde birbirine bağlanmaz [3].
+ATIF YAPILAN: [1, 3] | arama ilk alakalı sıra: 3
+
+--- chunk [1] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+belirtilecektir.
+Ek İse Önceki Bildirim
+Referans No.
+Bu alanda ek bildirimler için önceki bildirime yükümlü tarafından
+verilmiş yerel referans numarası belirtilecektir. Ek bildirimler için
+önceki bildirimin yerel referans numarasının belirtilmesi
+zorunludur.
+Aynı şüpheli eyleme ilişkin olarak birden fazla sayıda ek bildirim
+gönderilecek ise her bir bildirimde ilk gönderilen şüpheli işlem
+bildirimine ait yerel(yükümlü) referans numarası belirtilmelidir
+(Örneğin farklı tarihlerde düzenlenen 2 ve 3 yerel referans numaralı
+
+--- chunk [3] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+(Örneğin farklı tarihlerde düzenlenen 2 ve 3 yerel referans numaralı
+bildirimler 1 numaralı bildirimin eki ise; her iki bildirimde önceki
+yerel referans numarası “1” olarak belirtilmelidir. Bir diğer deyişle
+her bildirimin bir önceki bildirime ek yapılması sureti ile ⟦zincirleme⟧
+bir referans ağı oluşturulmamalıdır.).
+Bildirim
+Kategorisi
+Bu alanda “s uç gelirlerinin aklanması” veya “terörizmin
+finansmanı” ya da “ kitle imha silahlarının yayılmasının
+finansmanı” kategorilerinden yalnızca bir tanesi işaretlenecektir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#19 [held-out] cevaplı | otomatik hata türü: YOK
+SORU : Gerekmediği halde ivedi olarak gönderilen bildirimler hangi soruna yol açar?
+BEKLENEN: yol açabileceği
+CEVAP: Gerekmediği hâlde ivedi olarak gönderilen bildirimler, gerçekte daha yüksek risk arz eden başka bir vakanın değerlendirme sürecinin ertelenmesine yol açabilir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 4.2 Şüpheli İşlem Bildirim Formu]
+terörizmin finansmanı suçu ile ili şkili olduğuna dair şüpheyi
+destekleyen belge veya ciddi emare bulunması durumunda ise
+“İşlemin Ertelenmesi Talepli” seçeneği işaretlenmelidir. Aksi
+durumlarda aciliyet kodunun “Normal” olarak belirtilmesi
+gerekmektedir.
+Gerekmediği hâlde ivedi olarak gönderilen bildirimler, gerçekte
+daha yüksek risk arz eden başka bir vakanın değerlendirilmesi
+sürecinin ertelenmesine ⟦yol açabileceği⟧ için sadece gerekli hâllerde
+“İvedi”, “Çok İvedi” ve “İşlemin Ertelenmesi Talepli” kodları
+kullanılmalıdır.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#20 [held-out] cevapsız | otomatik hata türü: YOK
+SORU : Rehberin İngilizce sürümü hangi internet adresinden indirilir?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#21 [held-out] cevapsız | otomatik hata türü: YOK
+SORU : Bildirim yapan bankacıya ödül ya da prim verilir mi?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#22 [held-out] cevapsız | otomatik hata türü: YOK
+SORU : Bildirimi hazırlayan personelin hangi diplomaya sahip olması gerekir?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#23 [taze] cevaplı | otomatik hata türü: YOK
+SORU : MASAK.Online sistemine giriş yetkisi almak için yükümlü kurum hangi belgeyi, hangi imza türüyle MASAK'a göndermek zorundadır?
+BEKLENEN: ıslak imzalı olarak Başkanlığa iletilecektir
+CEVAP: Yükümlü kurum, uyum görevlisi ve uyum görevlisi yardımcıları tarafından düzenlenen "Elektronik Ortamda Şüpheli İşlem Bildirimi Taahhüt Formu (MSKFRM-THT-001-1.1)" belgesini MASAK'a göndermek zorundadır [1]. Form ıslak imzalı olarak Başkanlığa iletilir [1]. Kaynakta aynı form kodu "MSK-FRM-THT-001-1.1" biçiminde de geçmektedir [2].
+ATIF YAPILAN: [1, 2] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+3.2.1 MASAK.Online Erişimi
+MASAK.Online sistemine erişim yapılabilmesi için yükümlülerin uyum görevlileri ve uyum
+görevlisi yardımcıları tarafından işbu rehberin ekinde yer alan “Elektronik Ortamda Şüpheli
+İşlem Bildirimi Taahhüt Formu (MSKFRM-THT-001-1.1)” düzenlenerek ⟦ıslak imzalı olarak
+Başkanlığa iletilecektir⟧. Taahhüt formunun Başkanlığa iletilmesini müteakip Başkanlık
+tarafından başvuruda bulunan yükümlü ile ilgili uyum görevlisi ve uyum görevlisi yardımcısı
+için MASAK.Online sistemi içerisinde bir kullanıcı hesabı açıl acaktır. Oluşturulan hesaba
+erişim için kullanıcının sistemde tanımlı e -posta adresine bir aktivasyon bağlantısı
+
+--- chunk [2] ---
+[Bölüm: 3.2.1 MASAK.Online Erişimi]
+erişim için kullanıcının sistemde tanımlı e -posta adresine bir aktivasyon bağlantısı
+gönderilecek ve aktivasyon bağlantısına erişilmesi ile kullanıcı tarafından şifre belirlenecektir
+Yükümlülerin uyum görevlisinin değişmesi hâl inde yeni atanan uyum görevlisi ve uyum
+görevlisi yardımcısı tarafından “Elektronik Ortamda Şüpheli İşlem Bildirimi Taahhüt Formu
+(MSK-FRM-THT-001-1.1)” yeniden düzenlenerek ıslak imzalı olarak Başkanlığa
+gönderilecektir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#24 [taze] cevaplı | otomatik hata türü: YOK
+SORU : Bir bankanın uyum görevlisi değişirse MASAK.Online için ne yapılması gerekir?
+BEKLENEN: yeniden düzenlenerek
+CEVAP: Uyum görevlisi değişirse, yeni atanan uyum görevlisi ve uyum görevlisi yardımcısı "Elektronik Ortamda Şüpheli İşlem Bildirimi Taahhüt Formu (MSK-FRM-THT-001-1.1)" formunu yeniden düzenler ve ıslak imzalı olarak Başkanlığa gönderir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 3.2.1 MASAK.Online Erişimi]
+erişim için kullanıcının sistemde tanımlı e -posta adresine bir aktivasyon bağlantısı
+gönderilecek ve aktivasyon bağlantısına erişilmesi ile kullanıcı tarafından şifre belirlenecektir
+Yükümlülerin uyum görevlisinin değişmesi hâl inde yeni atanan uyum görevlisi ve uyum
+görevlisi yardımcısı tarafından “Elektronik Ortamda Şüpheli İşlem Bildirimi Taahhüt Formu
+(MSK-FRM-THT-001-1.1)” ⟦yeniden düzenlenerek⟧ ıslak imzalı olarak Başkanlığa
+gönderilecektir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#25 [taze] cevaplı | otomatik hata türü: YOK
+SORU : Rehbere göre hangi tarihten sonra şüpheli işlem bildirimleri yalnızca bu rehberdeki usullere göre gönderilebilir?
+BEKLENEN: 09.05.2024 tarihinden sonra
+CEVAP: 09.05.2024 tarihinden sonra şüpheli işlem bildirimleri yalnızca bu rehberde belirtilen esas ve usuller çerçevesinde gönderilecektir [1]. 08.05.2024 tarihine kadar ise bildirimler "1.4 Sürümü" kapsamındaki usullere göre de gönderilebilmiştir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+1.4 Yürürlük
+08.05.2024 tarihine kadar elektronik olarak gönderilecek şüpheli işlem bildirimleri “Şüpheli
+İşlem Bildirim Rehberi (Bankalar) 1.4 Sürümü ” kapsamında belirtilen usul ve esaslar
+çerçevesinde gönderilebilir. ⟦09.05.2024 tarihinden sonra⟧ şüpheli işlem bildirimleri sadece bu
+rehberde belirtilen esas ve usuller çerçevesinde gönderilecektir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#26 [taze] cevaplı | otomatik hata türü: YOK
+SORU : Elde tutulan (stok) mal varlıkları için yapılan bildirimlerde erteleme talebi işaretlenebilir mi?
+BEKLENEN: gönderilmemesi
+CEVAP: Hayır, elde tutulan (stok hâldeki) mal varlıkları için yapılan bildirimler "işlemin ertelenmesi" talebi ile gönderilmez [1]. Erteleme talepli bildirimler, yükümlüler nezdinde veya aracılığıyla yapılmaya teşebbüs edilen ya da halihazırda devam eden işlemlere ilişkin olarak gönderilir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 3.3 Erteleme Talepli Şüpheli İşlem Bildirimleri]
+gibi göstergeleri haiz olması,
+• Erteleme talepli şüpheli işlem bildirimlerinin, yükümlüler nezdinde veya bunlar
+aracılığıyla yapılmaya teşebbüs edilen ya da halihazırda devam eden işlemlere ilişkin
+olarak gönderilmesi, bu kapsamda örneğin stok hâlde bulunan mal varlığı değerlerine
+ilişkin şüpheli işlem bildirimlerinin “işlemin ertelenmesi” talebi ile ⟦gönderilmemesi⟧,
+• Şüpheli işlem bildirimini işlemin ertelenmesi talebi ile Başkanlığa gönderen
+yükümlülerin, işlem hakkında Bakan tarafından verilecek karar Başkanlıkça
+kendilerine tebliğ edilinceye kadar işlemi gerçekleştirmekten imtina etmeleri,
+gerekmektedir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#27 [taze] cevaplı | otomatik hata türü: YOK
+SORU : Bu rehber bankalar dışında hangi kuruluş için de geçerlidir?
+BEKLENEN: Posta ve Telgraf Teşkilatı
+CEVAP: Rehber, bankalar dışında **Posta ve Telgraf Teşkilatı A.Ş.** için de geçerlidir, ancak yalnızca bankacılık faaliyetleri ile sınırlı olarak [1][3]. Bu kuruluş da şüpheli işlem bildirimlerini rehberdeki esas ve usullere göre yapar [2].
+ATIF YAPILAN: [1, 2, 3] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+1. Giriş
+1.1 Amaç
+Bu rehber, bankalar ve bankacılık faaliyetleri ile sınırlı olmak üzere ⟦Posta ve Telgraf Teşkilatı⟧
+A.Ş. için şüpheli işlemlerin bildirimine ilişkin usul ve esasların düzenlenmesi amacı ile
+hazırlanmıştır.
+
+--- chunk [2] ---
+[Bölüm: 2. Genel Açıklama]
+tarafından yapılacak bildirimler, bu rehberlerde belirtilen usul ve esaslara uygun şe kilde
+yapılır.” ifadesi bulunmaktadır.
+Bu kapsamda; bankalar, bankacılık faaliyetleri ile sınırlı olmak üzere ⟦Posta ve Telgraf
+Teşkilatı⟧ A.Ş. şüpheli işlem bildirimlerini bu rehberde belirtilen usul ve esaslar çerçevesinde
+gönderecektir.
+
+--- chunk [3] ---
+1.2 Kapsam
+İşbu rehber içerisinde bankalar ve bankacılık faali yetleri ile sınırlı olmak üzere ⟦Posta ve
+Telgraf Teşkilatı⟧ A.Ş. tarafından şüpheli işlem bildirimlerinin nasıl yapılacağına dair esas ve
+usullere yer verilmiştir.
+Rehber içerisinde öncelikle şüpheli işlem bildirimlerinin kâğıt ortamında ve elektronik
+ortamda gönderimine dair süreçler anlatılmış, daha sonra şüpheli işlem bildirim formlarının
+nasıl düzenleneceğine dair detaylı bilgilere yer verilmiştir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#28 [taze] cevaplı | otomatik hata türü: YOK
+SORU : Hazine ve Maliye Bakanlığı'na şüpheli işlem bildirim formlarının düzenlenmesine ilişkin usul ve esasları belirleme yetkisini veren hüküm hangisidir?
+BEKLENEN: dördüncü fıkrasında
+CEVAP: Hazine ve Maliye Bakanlığı'na bu yetkiyi, Suç Gelirlerinin Aklanmasının ve Terörün Finansmanının Önlenmesine Dair Tedbirler Hakkında Yönetmelik'in 28'inci maddesinin dördüncü fıkrası vermektedir [1]. Bu fıkraya göre Bakanlık, şüpheli işlem bildirim formlarının düzenlenmesine ve bildirimlerin elektronik ortamda yapılmasına ilişkin usul ve esasları yükümlüler bazında ayrı ayrı belirleyebilir [1].
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 2. Genel Açıklama]
+cezalandırılır.
+Suç Gelirlerinin Aklanmasının ve Terörün Finansmanının Önlenmesine Dair Tedbirler
+Hakkında Yönetmelik’in 28’inci maddesinin ⟦dördüncü fıkrasında⟧ Hazine ve Maliye
+Bakanlığının şüpheli işlem bildirim formlarının düzenlenmesine, bildirimlerin elektronik
+ortamda ve bilgi iletişim araçları kullanılarak yapılması zorunluluğu getirilmesine ve şüpheli
+işlem bildirimlerinde elektronik imza kullanılmasına ilişkin usul ve esasları yükümlüler
+bazında ayrı ayrı belirlemeye yetkili olduğu belirtilmiştir.
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#29 [taze] cevaplı | otomatik hata türü: YOK
+SORU : MASAK'ın yayımladığı bildirim rehberleri nerede duyurulur?
+BEKLENEN: resmî internet sitesi
+CEVAP: Rehberler, Başkanlığın resmî internet sitesi ve/veya MASAK.Online aracılığıyla duyurulur. [1]
+ATIF YAPILAN: [1] | arama ilk alakalı sıra: 1
+
+--- chunk [1] ---
+[Bölüm: 2. Genel Açıklama]
+bazında ayrı ayrı belirlemeye yetkili olduğu belirtilmiştir.
+MASAK 13 Sıra No.l u Genel Tebliği’nin 6’ncı maddesinin birinci fıkrasında; “Başkanlık,
+elektronik ve kâğıt ortamındaki şüpheli işlemlerin bildirimlerine ilişkin usul ve esasları
+belirlemek üzere yükümlüler için genel ve sektörel mahiyette şüpheli işlem bildirim rehberleri
+yayımlayabilir.” hükmü yer almaktadır. Maddenin ikinci fıkrasında ise “Rehberler
+Başkanlığın ⟦resmî internet sitesi⟧ ve/veya MASAK.Online aracılığı ile duyurulur. Yükümlüler
+tarafından yapılacak bildirimler, bu rehberlerde belirtilen usul ve esaslara uygun şe kilde
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#30 [taze] cevaplı | otomatik hata türü: YOK
+SORU : Erteleme talebiyle bildirim yapmak için yalnızca şüphe yeterli midir?
+BEKLENEN: ciddi emare
+CEVAP: Hayır, yalnızca şüphe yeterli değildir. Erteleme talepli bildirim, işleme konu mal varlığının aklama veya terörizmin finansmanı suçuyla ilişkili olduğuna dair salt şüpheden öte, bu şüpheyi destekleyen belge veya ciddi emare bulunduğunda ve gerekçeleriyle birlikte gönderilmelidir [5]. Bu belge veya ciddi emare; işlemin olağandışı nitelikli olması, kişilerin suçla ilgili olduğunun veya olabileceğinin kontrollerle anlaşılması ya da işlemin fonlara el koymayı engelleyeceğine veya zorlaştıracağına ilişkin tehlikeli bir hâlin bulunması gibi göstergeleri taşımalıdır [2]. Gerekçe açık ve ayrıntılı şekilde yazılmalıdır [4].
+ATIF YAPILAN: [2, 4, 5] | arama ilk alakalı sıra: 2
+
+--- chunk [2] ---
+[Bölüm: 3.3 Erteleme Talepli Şüpheli İşlem Bildirimleri]
+olduğuna dair şüpheyi destekleyen belge veya ⟦ciddi emare⟧ kapsamında;
+- Erteleme talepli şüpheli işlem bildirimine konu işlemin, olağandışı nitelikli
+olması,
+- Çeşitli veri tabanlarından ya da diğer kaynaklardan yapılan kontroller
+sonucunda işlemi yapan kişi ya da kişilerin suçla ilgili olduğunun veya
+olabileceğinin anlaşılması,
+- İşlemin tamamlanmasının terörizmin finansmanı ile ilgili olduğu düşünülen
+fonlara ya da suçtan elde edilen gelirlere el koymayı engelleyeceğine veya
+zorlaştıracağına ilişkin tehlikeli bir hâlin bulunması,
+gibi göstergeleri haiz olması,
+
+--- chunk [4] ---
+[Bölüm: 3.3 Erteleme Talepli Şüpheli İşlem Bildirimleri]
+gerekçesine açık ve ayrıntılı şekilde yer verilir.
+Bu kapsamda, erteleme talebiyle gönderilecek şüpheli işlem bildiriminde belirtilen hususların
+dikkate alınması uygulamanın sağlıklı işleyişi ve etkinliği bakımından önem arz etmektedir.
+
+--- chunk [5] ---
+[Bölüm: 3.3 Erteleme Talepli Şüpheli İşlem Bildirimleri]
+Buna göre;
+• Erteleme talepli şüpheli işlem bildirimlerinin, yükümlüler nezdinde veya bunlar
+aracılığıyla yapılmaya teşebbüs edilen ya da halihazırda devam eden işleme konu mal
+varlığının aklama veya terörizmin finansmanı suçu ile ilişkili olduğuna dair salt
+şüpheden öte şüpheyi destekleyen belge veya ⟦ciddi emare⟧ bulunması durumunda
+gerekçeleri ile birlikte gönderilmesi,
+• İşleme konu mal varlığının aklama veya terörizmin finansmanı suçu ile ilişkili
+olduğuna dair şüpheyi destekleyen belge veya ⟦ciddi emare⟧ kapsamında;
+
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#31 [taze] cevapsız | otomatik hata türü: YOK
+SORU : MASAK, bildirimi gönderen bankaya geri bildirimi kaç gün içinde verir?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#32 [taze] cevapsız | otomatik hata türü: YOK
+SORU : Rehbere göre bildirim verileri kişisel verilerin korunması mevzuatı kapsamında nasıl saklanmalıdır?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________
+
+==============================================================================
+#33 [taze] cevapsız | otomatik hata türü: YOK
+SORU : Bildirimlerin gönderilmesi için MASAK'a ödenen ücret ve harç ne kadardır?
+BEKLENEN: (rehberde yok: 'bulamadım' demeli)
+CEVAP: Rehberde bu bilgiyi bulamadım.
+ATIF YAPILAN: yok | arama ilk alakalı sıra: -
+
+(Rehberde olmayan soru: doğrusu sadece 'bulamadım' demek. Cevapta başka bilgi varsa kaynakla karşılaştır.)
+ELLE NOT: ______________________________________________

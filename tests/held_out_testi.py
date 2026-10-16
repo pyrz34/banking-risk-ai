@@ -5,14 +5,11 @@ Değiştirirsen bu set artık held-out değildir; yeni soru yazman gerekir.
 
 Eşleştirme boşluk ve büyük/küçük harf yok sayılarak yapılır (pypdf sürümüne göre kelimeler yapışık çıkabiliyor).
 """
-
 import os
 import re
 import sys
 
-sys.path.insert(
-    0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src")
-)
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "src"))
 
 from rag_cevap import cevapla  # noqa: E402
 from rag_cevap_testi import sadece_bulamadim  # noqa: E402
@@ -20,62 +17,23 @@ from rag_index import indeks_olustur, modeli_yukle  # noqa: E402
 
 # (soru, kaynakta geçmesi gereken ifade, cevapta geçmesi gereken ifadelerden BİRİ). PDF'ten elle doğrulandı.
 CEVAPLI = [
-    (
-        "Şüpheli işlem açıklama alanına en az kaç karakter girilmesi zorunludur?",
-        "100 karakter",
-        ("100",),
-    ),
-    (
-        "Bir bildirimde en fazla kaç şüphe kategorisi seçilebilir?",
-        "en fazla üçü",
-        ("üç", "3"),
-    ),
-    (
-        "Terörizmin finansmanı için yeterli şüphe yoksa hangi bildirim kategorisi işaretlenmelidir?",
-        "yeterli düzeyde",
-        ("aklanması",),
-    ),
-    (
-        "Kitle imha silahlarının yayılmasının finansmanı bildirimlerinde hangi şüphe kategorisi kullanılmalıdır?",
-        "SK-36",
-        ("SK-36",),
-    ),
-    (
-        "Mal varlığının dondurulması kararının ihlali hangi kodla bildirilir?",
-        "SK-35",
-        ("SK-35",),
-    ),
-    (
-        "Vadeli mevduat veya katılım hesabının hesap türü kodu nedir?",
-        "HT-02",
-        ("HT-02",),
-    ),
+    ("Şüpheli işlem açıklama alanına en az kaç karakter girilmesi zorunludur?", "100 karakter", ("100",)),
+    ("Bir bildirimde en fazla kaç şüphe kategorisi seçilebilir?", "en fazla üçü", ("üç", "3")),
+    ("Terörizmin finansmanı için yeterli şüphe yoksa hangi bildirim kategorisi işaretlenmelidir?",
+     "yeterli düzeyde", ("aklanması",)),
+    ("Kitle imha silahlarının yayılmasının finansmanı bildirimlerinde hangi şüphe kategorisi kullanılmalıdır?",
+     "SK-36", ("SK-36",)),
+    ("Mal varlığının dondurulması kararının ihlali hangi kodla bildirilir?", "SK-35", ("SK-35",)),
+    ("Vadeli mevduat veya katılım hesabının hesap türü kodu nedir?", "HT-02", ("HT-02",)),
     ("POS tefeciliği hangi şüphe kategorisi koduyla bildirilir?", "SK-02", ("SK-02",)),
-    (
-        "Şüpheli işlem bildiriminde bulunulduğunu müşteriye açıklayan görevli ne ile cezalandırılır?",
-        "bir yıldan üç yıla",
-        ("hapis",),
-    ),
-    (
-        "Faks ile yapılan bildirimlerde ayrıca ne yapılması gerekir?",
-        "form aslının posta",
-        ("posta",),
-    ),
-    (
-        "Aynı konuyla ilgili birden çok kişi için kaç şüpheli işlem bildirim formu düzenlenir?",
-        "tek bir ŞİB",
-        ("tek bir",),
-    ),
-    (
-        "Aynı eylem için birden fazla ek bildirim gönderilecekse önceki referans numarası nasıl yazılır?",
-        "zincirleme",
-        ("ilk",),
-    ),
-    (
-        "Gerekmediği halde ivedi olarak gönderilen bildirimler hangi soruna yol açar?",
-        "yol açabileceği",
-        ("ertelen",),
-    ),
+    ("Şüpheli işlem bildiriminde bulunulduğunu müşteriye açıklayan görevli ne ile cezalandırılır?",
+     "bir yıldan üç yıla", ("hapis",)),
+    ("Faks ile yapılan bildirimlerde ayrıca ne yapılması gerekir?", "form aslının posta", ("posta",)),
+    ("Aynı konuyla ilgili birden çok kişi için kaç şüpheli işlem bildirim formu düzenlenir?", "tek bir ŞİB", ("tek bir ŞİB", "tek bir form", "tek form")),
+    ("Aynı eylem için birden fazla ek bildirim gönderilecekse önceki referans numarası nasıl yazılır?",
+     "zincirleme", ("ilk",)),
+    ("Gerekmediği halde ivedi olarak gönderilen bildirimler hangi soruna yol açar?",
+     "yol açabileceği", ("ertelen",)),
 ]
 # Rehberde bu konular geçmiyor (PDF'te 'İngilizce', 'ödül', 'prim', 'diploma/mezun/sertifika' aratıldı)
 CEVAPSIZ = [
@@ -99,20 +57,13 @@ def main():
         s = cevapla(soru, chunklar, vektorler, model)
         girdi += s["kullanim"].input_tokens
         cikti += s["kullanim"].output_tokens
-        sira = next(
-            (k["no"] for k in s["kaynaklar"] if norm(beklenen) in norm(k["metin"])),
-            None,
-        )
+        sira = next((k["no"] for k in s["kaynaklar"] if norm(beklenen) in norm(k["metin"])), None)
         icerik = any(norm(x) in norm(s["cevap"]) for x in cevapta)
         dogru = icerik and not sadece_bulamadim(s["cevap"])
         ret_ok += sira is not None
         cev_ok += dogru
-        print(
-            f"\n[arama {'OK ' if sira else 'YOK'} | cevap {'OK ' if dogru else 'YOK'}] {soru}"
-        )
-        print(
-            f"  doğru chunk kaynak no: {sira} | sayfalar {[k['sayfa'] for k in s['kaynaklar']]}"
-        )
+        print(f"\n[arama {'OK ' if sira else 'YOK'} | cevap {'OK ' if dogru else 'YOK'}] {soru}")
+        print(f"  doğru chunk kaynak no: {sira} | sayfalar {[k['sayfa'] for k in s['kaynaklar']]}")
         print(f"  cevap: {s['cevap']}")
 
     print("\n=== CEVABI REHBERDE OLMAYAN SORULAR ===")

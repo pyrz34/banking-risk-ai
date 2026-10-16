@@ -1,8 +1,9 @@
 """Gün 13: RAG DEĞERLENDİRME TABLOSU. Amaç: RAG'in 'çalıştığını' değil, NEREDE HATA YAPTIĞINI görmek.
-Çalıştır: python tests\\rag_degerlendirme.py   (gerçek e5 + gerçek Claude çağrısı; 22 soru, küçük maliyet)
+Çalıştır: python tests\\rag_degerlendirme.py   (gerçek e5 + gerçek Claude çağrısı; 33 soru, küçük maliyet)
 
-Sorular yeni yazılmadı: rag_cevap_testi.py (AYAR seti: üzerinde prompt/chunk ayarı yaptık, skoru şişik)
-ve held_out_testi.py (HELD-OUT seti: ayar yapılmadan önce yazıldı) içindeki soruları kullanır. Tablo iki kümeyi AYRI sayar.
+Sorular: rag_cevap_testi.py (AYAR seti: üzerinde prompt/chunk ayarı yaptık, skoru şişik),
+held_out_testi.py (HELD-OUT seti: ayar yapılmadan önce yazıldı) ve taze_sorular.py (TAZE set: Gün 13'te yazıldı,
+hiç ayar görmedi). Tablo üç kümeyi AYRI sayar.
 
 Her soru için ölçülenler:
   Arama      : beklenen bilgi çekilen 5 chunk'tan birinde var mı (+ kaçıncı sırada, 5 chunk'ın kaçı alakalı)
@@ -27,6 +28,7 @@ from risk_rag import atif_numaralari  # noqa: E402
 
 import held_out_testi  # noqa: E402
 import rag_cevap_testi  # noqa: E402
+import taze_sorular  # noqa: E402
 
 HATA_TURLERI = {
     "ARAMA_KACTI": "Beklenen bilgi çekilen chunk'larda yok (sorun arama/chunklamada)",
@@ -97,6 +99,10 @@ def soru_listesi():
         liste.append(("held-out", "cevaplı", soru, bek_k, bek_c))
     for soru in held_out_testi.CEVAPSIZ:
         liste.append(("held-out", "cevapsız", soru, "", ()))
+    for soru, bek_k, bek_c in taze_sorular.CEVAPLI:
+        liste.append(("taze", "cevaplı", soru, bek_k, bek_c))
+    for soru in taze_sorular.CEVAPSIZ:
+        liste.append(("taze", "cevapsız", soru, "", ()))
     return liste
 
 
@@ -111,10 +117,15 @@ def hucre(metin, n=70):
 
 def ozet_satirlari(satirlar):
     cikti = []
-    for kume in ("ayar", "held-out"):
+    adlar = {"ayar": "AYAR seti (ayar yapıldı, skor şişik)",
+             "held-out": "HELD-OUT seti (ayar yapılmadı)",
+             "taze": "TAZE set (Gün 13'te yazıldı, hiç ayar görmedi; en dürüst ölçü)"}
+    for kume in ("ayar", "held-out", "taze"):
         cv = [s for s in satirlar if s["kume"] == kume and s["tur"] == "cevaplı"]
         cs = [s for s in satirlar if s["kume"] == kume and s["tur"] == "cevapsız"]
-        ad = "AYAR seti (ayar yapıldı, skor şişik)" if kume == "ayar" else "HELD-OUT seti (ayar yapılmadı)"
+        if not cv and not cs:
+            continue
+        ad = adlar[kume]
         cikti.append(f"**{ad}**")
         cikti.append(f"- Cevaplı sorular ({len(cv)}): arama {sum(s['arama'] for s in cv)}/{len(cv)}, "
                      f"cevap {sum(s['cevap_ok'] for s in cv)}/{len(cv)}, "

@@ -76,8 +76,12 @@ kontrol("Cevapsız + 'bulamadım' hiç yok: UYDURMA_RISKI", d["hata"] == "UYDURM
 
 # --- birleşik liste ve çıktılar ---
 liste = rd.soru_listesi()
-kontrol("Soru listesi: en az 10 soru, iki küme, cevaplı + cevapsız var",
-        len(liste) >= 10 and {x[0] for x in liste} == {"ayar", "held-out"} and {x[1] for x in liste} == {"cevaplı", "cevapsız"})
+kontrol("Soru listesi: en az 10 soru, üç küme (ayar, held-out, taze), cevaplı + cevapsız var",
+        len(liste) >= 10 and {x[0] for x in liste} == {"ayar", "held-out", "taze"} and {x[1] for x in liste} == {"cevaplı", "cevapsız"})
+kontrol("Taze set: en az 5 cevaplı + 3 cevapsız, hiçbiri ayar/held-out sorularıyla aynı değil",
+        sum(1 for x in liste if x[0] == "taze" and x[1] == "cevaplı") >= 5
+        and sum(1 for x in liste if x[0] == "taze" and x[1] == "cevapsız") >= 3
+        and not ({x[2] for x in liste if x[0] == "taze"} & {x[2] for x in liste if x[0] != "taze"}))
 kontrol("Cevaplı sorularda beklenen bilgi dolu, cevapsızlarda boş",
         all(bool(x[3]) and bool(x[4]) for x in liste if x[1] == "cevaplı")
         and all(not x[3] and not x[4] for x in liste if x[1] == "cevapsız"))
@@ -95,6 +99,17 @@ kontrol("Markdown: her soru bir tablo satırı, '|' ve satır sonu hücreyi bozm
 kontrol("Markdown: hata türü bölümü hatalı soruyu listeliyor, hatasızı listelemiyor",
         "### MODEL_REDDETTI (1)" in md and "#2 (ayar)" in md and "#1 (held-out)" not in md)
 kontrol("Markdown: özet AYAR ve HELD-OUT'u ayrı sayıyor", "AYAR seti" in md and "HELD-OUT seti" in md)
+satir_taze = dict(satir_ok, kume="taze", no=3)
+md3 = rd.markdown_uret([satir_ok, satir_hata, satir_taze])
+kontrol("Markdown: TAZE set varsa ayrı özetlenir, yoksa özette boş TAZE başlığı çıkmaz",
+        "TAZE set" in md3 and "TAZE set" not in md)
+
+# --- taze sorulardaki beklenen ifadeler PDF'te gerçekten var mı (yazım hatası koruması; ağ ve Claude yok) ---
+from chunklama import chunkla  # noqa: E402
+from pdf_yukle import pdf_yukle  # noqa: E402
+_pdf_chunk = " ".join(rd.norm(c["text"]) for c in chunkla(pdf_yukle()))
+yok = [x[3] for x in liste if x[0] == "taze" and x[1] == "cevaplı" and rd.norm(x[3]) not in _pdf_chunk]
+kontrol(f"Taze sorularda beklenen kaynak ifadesi PDF chunk'larında geçiyor (eksik: {yok})", not yok)
 kontrol("Her hata türünün açıklaması var", all(d_ in rd.HATA_TURLERI for d_ in [
     "ARAMA_KACTI", "MODEL_REDDETTI", "CEVAP_EKSIK_YANLIS", "ATIF_YOK", "ATIF_GECERSIZ",
     "ATIF_YANLIS_KAYNAK", "RED_ARTI_ILGILI_BILGI", "UYDURMA_RISKI"]))
