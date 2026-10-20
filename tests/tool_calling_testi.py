@@ -110,11 +110,13 @@ sema = {s["name"]: s for s in bt.TOOL_SCHEMAS}
 kontrol("Şema: araç adları FONKSIYONLAR ile aynı", set(sema) == set(bt.FONKSIYONLAR), (set(sema), set(bt.FONKSIYONLAR)))
 uyum = True
 for ad, s in sema.items():
-    parametreler = list(inspect.signature(bt.FONKSIYONLAR[ad]).parameters)
+    imza = inspect.signature(bt.FONKSIYONLAR[ad]).parameters
+    parametreler = list(imza)
+    zorunlu = [n for n, p in imza.items() if p.default is inspect.Parameter.empty]  # varsayılanı olmayanlar zorunlu
     sch = s["input_schema"]
-    uyum &= sch["type"] == "object" and list(sch["properties"]) == parametreler and sch["required"] == parametreler
+    uyum &= sch["type"] == "object" and list(sch["properties"]) == parametreler and sch["required"] == zorunlu
     uyum &= bool(s["description"].strip()) and all(p.get("description") for p in sch["properties"].values())
-kontrol("Şema: properties ve required fonksiyon parametreleriyle aynı (adlar, sıra), açıklamalar dolu", uyum)
+kontrol("Şema: properties fonksiyon parametreleriyle, required varsayılanı olmayanlarla aynı (adlar, sıra), açıklamalar dolu", uyum)
 
 alanlar = api.TransactionRequest.model_fields
 props = sema["get_risk_score"]["input_schema"]["properties"]
