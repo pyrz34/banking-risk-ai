@@ -1,4 +1,4 @@
-"""Gün 15: agent döngüsü testleri. Çalıştır: python tests\\agent_testi.py
+"""Gün 15-17: agent döngüsü testleri. Çalıştır: python tests\\agent_testi.py
 Ağ yok, gerçek Claude çağrısı yok (sahte istemci). Hızlı ve ücretsiz.
 Ölçtüğü: döngü doğru kuruluyor mu, frenler (adım, token) çalışıyor mu, bitiş nedeni doğru mu, hata sonrası devam ediyor mu.
 ÖLÇMEDİĞİ: gerçek Claude'un doğru karar verip vermediği (onu python src\\agent.py ile gör).
@@ -79,6 +79,52 @@ kontrol("Varsayılanlar: max_steps 5, token bütçesi, düşünme payı", agent.
 kontrol("Sistem mesajı: sıralı araç kullanımı, hata sonrası düzeltme, veri/talimat kuralı",
         all(x in agent.SISTEM_MESAJI for x in ("önce o aracı", "error", "bir kez daha", "talimat")))
 
+# ---------- Gün 17: sistem mesajı kural 9 ve sistem_mesaji parametresi ----------
+kontrol("Kural 9 yeni sistem mesajında var, eskisinde yok",
+        "9. " in agent.SISTEM_MESAJI and "9. " not in agent.SISTEM_MESAJI_ESKI and agent.KURAL_9 in agent.SISTEM_MESAJI)
+kontrol("Eski sistem mesajı 1-8'i aynen taşıyor, yeni olan onun üstüne yalnız kural 9 ekliyor (karşılaştırma tek farkı ölçer)",
+        agent.SISTEM_MESAJI.startswith(agent.SISTEM_MESAJI_ESKI) and agent.SISTEM_MESAJI == agent.SISTEM_MESAJI_ESKI + "\n" + agent.KURAL_9
+        and all(f"{i}. " in agent.SISTEM_MESAJI_ESKI for i in range(1, 9)))
+kontrol("Kural 9: doğrulanamayan bağlantıyı söyle, ilgisiz atıf yok, rehberde olmayanı rehber gibi sunma",
+        all(x in agent.KURAL_9 for x in ("doğrulayamadığını", "atıf", "rehber bilgisi gibi")))
+c = SahteClaude(cevap([metin_blok("a")], "end_turn"), cevap([metin_blok("b")], "end_turn"))
+agent.calistir("g", istemci=c, sistem_mesaji=agent.SISTEM_MESAJI_ESKI)
+agent.calistir("g", istemci=c)
+kontrol("sistem_mesaji parametresi isteğe gider; verilmezse varsayılan SISTEM_MESAJI",
+        c.cagrilar[0]["system"] == agent.SISTEM_MESAJI_ESKI and c.cagrilar[1]["system"] == agent.SISTEM_MESAJI)
+
+# ---------- Gün 17: süre ölçümü (sahte saat: her okuma 0.5 sn ilerler) ----------
+class SahteSaat:
+    def __init__(self):
+        self.t = -0.5
+
+    def __call__(self):
+        self.t += 0.5
+        return self.t
+
+
+gercek_saat = agent._saat
+agent._saat = SahteSaat()
+try:
+    c = SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use"), cevap([metin_blok("Tamam.")], "end_turn"))
+    s = agent.calistir("g", istemci=c)
+finally:
+    agent._saat = gercek_saat
+kontrol("Süre: Claude adımları 500 ms, araç 500 ms, toplam 3500 ms (sahte saatle tam değer)",
+        [a["sure_ms"] for a in s["adimlar"]] == [500, 500] and s["adimlar"][0]["araclar"][0]["sure_ms"] == 500 and s["sure_ms"] == 3500,
+        (s["adimlar"], s["sure_ms"]))
+agent._saat = SahteSaat()
+try:
+    s = agent.calistir("g", istemci=SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use")), max_steps=1)
+finally:
+    agent._saat = gercek_saat
+kontrol("Süre: sınırda çalıştırılmayan araçta sure_ms None, adımda ve toplamda var",
+        s["adimlar"][0]["araclar"][0]["sure_ms"] is None and s["adimlar"][0]["sure_ms"] == 500 and s["sure_ms"] == 1500, s)
+s = agent.calistir("g", istemci=SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use"), cevap([metin_blok("T")], "end_turn")))
+kontrol("Süre: gerçek saatle de tam sayı ve sıfırdan büyük değil eşit/büyük (negatif olamaz)",
+        isinstance(s["sure_ms"], int) and s["sure_ms"] >= 0 and all(isinstance(a["sure_ms"], int) and a["sure_ms"] >= 0 for a in s["adimlar"])
+        and s["adimlar"][0]["araclar"][0]["sure_ms"] >= 0)
+
 # ---------- sıralı iki araç (bağımlı) ----------
 c = SahteClaude(
     cevap([arac_blok("a", "get_customer_info", M1)], "tool_use", 100, 10),
@@ -95,7 +141,7 @@ kontrol("3. çağrı geçmişi: 1. aracın sonucu da, 2. aracın sonucu da orada
 kontrol("2. adım gerçekten 1. adımın sonucuna bağlı çağrı yaptı (account_id=1) ve araç çalıştı",
         s["adimlar"][1]["araclar"][0]["girdi"]["account_id"] == 1 and "risk_score" in s["adimlar"][1]["araclar"][0]["sonuc"])
 kontrol("Adım kaydı: adim, durum, araclar, token alanları",
-        all(set(a) == {"adim", "durum", "araclar", "girdi_token", "cikti_token"} for a in s["adimlar"])
+        all(set(a) == {"adim", "durum", "araclar", "girdi_token", "cikti_token", "sure_ms"} for a in s["adimlar"])
         and [a["adim"] for a in s["adimlar"]] == [1, 2, 3] and [a["durum"] for a in s["adimlar"]] == ["tool_use", "tool_use", "end_turn"])
 kontrol("Token toplamı üç çağrıyı topluyor", s["kullanim"] == {"girdi": 600, "cikti": 60, "cagri": 3}, s["kullanim"])
 
