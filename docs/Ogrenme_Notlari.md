@@ -21,3 +21,14 @@
 - Gerçek çalıştırma: 4 görevin hepsi bitti. "Ödül/prim" sorusunda rehberde olmadığı için "bulamadım" dedi.
 - Gördüğüm sorun: 4. görevde Claude Hollanda'yı "riskli ülke" tipine bağlar gibi yazdı, ama bunu hiçbir araç doğrulamadı. Gün 17-18'de prompt kuralı + mini-eval ile ölçeceğiz.
 - İlk çağrıda girdi 2265 token; araç şemaları her adımda tekrar gönderildiği için pahalı.
+heyo
+## Gün 17 – Agent Workflow ve İz (trace)
+
+- Agent'a iz ekledik: her adımda hangi araç, hangi argüman, ne kadar sürdü, kaç token. İz data\izler\ altına JSON olarak kaydediliyor (müşteri verisi içerdiği için repoya girmiyor, .gitignore'da).
+- Testler: agent_trace 58/58, agent 41/41, banking_tools 65/65, tool_calling 39/39, risk_rag 26/26.
+- Gerçek çalıştırmada ilk rehber araması 6.5 sn sürdü (model yükleniyor), ikincisi 0.1 sn. API'de modeli önceden yüklemek lazım.
+- Girdi token'ı her adımda büyüyor çünkü rehber sonuçları (yaklaşık 1400 token) her adımda tekrar gönderiliyor.
+- Kural 9'u ekleyip eski/yeni sistem mesajını 12 çalıştırmayla karşılaştırdık. Yeni mesajla G4'te iki seferde de "Hollanda riskli ülke mi, tutar eşiği aştı mı doğrulayamadım" dedi, eskisinde hiç demedi. Örnek küçük, kesin değil.
+- Kural 9 dolgu atıfı (s.16-17) çözmedi. G3'te "iç yönetmeliğe bakın" önerisi 4/4 çıktı, onu zararsız bulduk.
+- Aynı G4 görevi 10760 ile 16615 token arasında değişti (2 ya da 3 araç çağrısı), maliyet tek sayı değil aralık.
+- Her çağrıya kural 9 yaklaşık 205 token ekliyor.
