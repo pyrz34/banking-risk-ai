@@ -43,3 +43,23 @@ heyo
 - Sorun: rehber dayanağı tekrarlar arasında değişiyor (ajan sorguyu kendi yazıyor, rehberde kural kodlarının tanımı yok). Düşük riskli müşteride de gereksiz rehber araması yapıp ~17 bin token harcıyor.
 - İlk rehber araması yine ~10 sn (model yükleniyor); API'de önceden yüklemek lazım.
 - Bu PoC production'a hazır değil: kimlik doğrulama yok, zaman aşımı/yeniden deneme yok, KVKK değerlendirmesi yok, örnek 5 senaryo.
+
+## Gün 19 – /investigate: uçtan uca API, önbellek, zarif bozulma
+
+**Ne yaptım:** Gün 18'deki müşteri inceleme ajanını FastAPI'ye `POST /investigate` olarak bağladım. Müşteri numarası veriyorum, müşteri özeti + en riskli 3 işlem + ajan raporu dönüyor.
+
+**Gördüğüm / öğrendiğim:**
+- Cevap üç basamaklı. Önce ajan raporu denenir. Ajan çökerse ya da adım sınırında kesilirse en riskli işlemin kural tabanlı açıklaması gelir. O da çökerse sadece veri döner. Müşteri varsa her durumda 200 döner, yoksa 404.
+- Gerçekten denedim: Claude'a giden adresi bozunca (`ANTHROPIC_BASE_URL`) 200 döndü, `rapor_kaynagi: yok`, uyarılarda ne olduğu yazıyordu, 3 işlem yerindeydi. Bu hata durumu 15,8 sn sürdü, çünkü iki basamak da kendi yeniden denemesini yaptı.
+- Önbellek: aynı müşteriyi ikinci kez sorunca 128 ms, ilkinde 14–16 sn. `?yenile=true` ile önbellek atlanıyor. Sayaçlar (`/onbellek-durumu`) istek sayımla tutarlı çıktı: 1 ıska, 2 isabet.
+- Önbellek anahtarına veri dosyasının imzası da giriyor, yani Excel değişirse eski rapor kullanılmıyor.
+- Gerçek bir ajan koşusu yaklaşık 15k girdi + 2,8k çıktı token tuttu. Dolar maliyetini henüz ölçmedim.
+- Sunucu açılırken e5 modeli önceden yükleniyor (ısınma), ilk istek 10 sn beklemesin diye.
+- Ajan raporunun "Rehber dayanağı" kısmı zayıf çıktı: ajan kural tanımlarını rehberde bulamadığını dürüstçe yazdı ama atıfları (s.16, s.43) işlemle pek ilgili değil. Bunu düzeltmek Gün 20'de ele alınacak, ölçmeden "düzeldi" demeyeceğim.
+
+**Takıldığım yerler:**
+- `uvicorn src.api:app` çalışmadı (`No module named 'risk_engine'`). Doğrusu `uvicorn api:app --app-dir src`.
+- PowerShell 5'te `Invoke-RestMethod` Türkçe harfleri bozuk gösterdi. Sunucu doğruydu. UTF-8 olarak çözen komutla düzgün gördüm.
+- `api.py` 133 değil 142 satırdı. Fark formatlayıcının (black) satır bölmesiydi, mantık aynıydı. `git diff` boştu, o yüzden güvenle üstüne yazdım.
+
+**Henüz yapmadığım:** kimlik doğrulama yok, toplam süre sınırı sadece ajan için var, KVKK değerlendirmesi yapılmadı. "Production-ready" değil, PoC.
