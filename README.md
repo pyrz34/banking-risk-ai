@@ -114,8 +114,9 @@ Her test dosyası `python tests\<ad>.py` ile çalışır, sonunda `N/N kontrol g
 | `investigate_testi.py` | 60 |
 | `risk_rag_testi.py` | 26 |
 | `rag_degerlendirme_testi.py` | 21 |
+| `maliyet_olcum_testi.py` | 20 |
 
-**Gerçek Claude çağırır (küçük maliyet):** `held_out_testi.py`, `rag_cevap_testi.py`, `inceleme_degerlendirme.py` (ajan mini değerlendirmesi), `rag_degerlendirme.py`.
+**Gerçek Claude çağırır (küçük maliyet):** `held_out_testi.py`, `rag_cevap_testi.py`, `inceleme_degerlendirme.py` (ajan mini değerlendirmesi), `rag_degerlendirme.py`, `maliyet_olcum.py`.
 
 **Diğer:** `arama_testi.py` yerel e5 modelini kullanır (Claude yok). `api_istek.py` çalışan sunucuya 7 istek atar.
 
@@ -141,11 +142,26 @@ Küme boyutları küçük, güven aralığı geniş. "Dayanaklı" otomatik bir v
 | Token | yaklaşık 15-18k girdi + 2,4-2,8k çıktı (aynı görevde değişir) |
 | Eksik/kapsam dışı görev | 3,5-7k token |
 
-### Maliyet
+### Maliyet ve önbellek
 
-Model: `claude-haiku-5-5`. Üçüncü taraf kaynaklara göre (resmi fiyat sayfasını doğrudan açamadım, kullanmadan önce [resmi sayfadan](https://platform.claude.com/docs/en/about-claude/pricing) teyit et) fiyat 100K tokene kadar olan promptlarda 1M girdi tokeni başına 0,10 USD, 1M çıktı tokeni başına 0,50 USD.
+Model: `claude-haiku-5-5`. Fiyat olarak 100K tokene kadar olan promptlarda 1M girdi tokeni başına 0,10 USD, 1M çıktı tokeni başına 0,50 USD kullandım. Bu rakamı iki üçüncü taraf kaynakta gördüm, resmi fiyat sayfasını doğrudan açamadım: kullanmadan önce [resmi sayfadan](https://platform.claude.com/docs/en/about-claude/pricing) teyit et.
 
-Ölçtüğüm iki müşteri-1 incelemesi (15.087 girdi + 2.807 çıktı ve 14.683 girdi + 2.429 çıktı) bu fiyatla yaklaşık **0,003 USD** tutuyor. Çıktı tokenlerine düşünme (thinking) tokenleri de dahil. Önbellekten gelen çağrı Claude'a gitmediği için ücretsiz. İz dosyalarında maliyeti görmek için çalıştırmadan önce:
+Aynı işlemin (skor 70, 3 kural) farklı yollarla açıklatılması, `python tests\maliyet_olcum.py --tekrar 3 --ajan` ile ölçüldü (tam çıktı: [`docs/MALIYET_OLCUM.md`](docs/MALIYET_OLCUM.md)):
+
+| Yol | n | Girdi token (medyan, aralık) | Çıktı token (medyan, aralık) | Süre (medyan) | Tahmini USD |
+|---|---|---|---|---|---|
+| RAG'siz açıklama | 3 | 369 (369-369) | 406 (231-507) | 2,5 sn | 0,00024 |
+| RAG'li açıklama (`/explain-risk`) | 3 | 1974 (1974-1974) | 1691 (1404-2100) | 8,0 sn | 0,00104 |
+| RAG'li açıklama, önbellekten | 3 | 0 | 0 | 0,02 ms | 0 |
+| Müşteri incelemesi (ajan), ıska | 1 | 14683 | 2301 | 17,8 sn | 0,00262 |
+| Müşteri incelemesi (ajan), önbellekten | 1 | 0 | 0 | 45 ms | 0 |
+
+Okuma:
+- **RAG ek maliyet getiriyor:** bu işlemde girdi yaklaşık 5,3, çıktı 4,2, süre 3,2, tahmini maliyet 4,3 kat. Girdi artışı rehber parçalarından. Çıktı artışının büyük kısmı düşünme (thinking) tokenleridir ve RAG'li istem Claude'a "hangi kaynak doğrudan karşılık veriyor" diye ek düşündürdüğü için şişiyor. RAG'siz ve RAG'li istemler farklı olduğundan, fark yalnız "rehber verisi" farkı değil, "rehber verisi + onu kullanma kuralları" farkıdır.
+- **Önbellek isabeti Claude'a gitmez:** 0 token, ihmal edilebilir süre. Bir ajan incelemesi ıskada yaklaşık 0,003 USD ve 18 sn, isabette ~45 ms (veri katmanı yine çalıştığı için sıfır değil).
+- **Ölçülmeyenler:** gerçek kullanımdaki önbellek isabet **oranı** (trafik olmadan ölçülemez). Tek işlem ve az tekrar, yani bir büyüklük sırasıdır, ortalama değildir.
+
+İz dosyalarında maliyeti görmek için çalıştırmadan önce:
 
 ```powershell
 $env:GIRDI_FIYAT_1M = "0.10"; $env:CIKTI_FIYAT_1M = "0.50"
