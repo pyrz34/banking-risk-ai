@@ -164,6 +164,16 @@ Okuma:
 - **Önbellek isabeti Claude'a gitmez** (`/explain-risk` ve `/investigate` önbellekli): 0 token, ihmal edilebilir süre. Bir ajan incelemesi ıskada yaklaşık 0,003 USD ve 18 sn, isabette ~45 ms (veri katmanı yine çalıştığı için sıfır değil).
 - **Ölçülmeyenler:** gerçek kullanımdaki önbellek isabet **oranı** (trafik olmadan ölçülemez). Tek işlem ve az tekrar, yani bir büyüklük sırasıdır, ortalama değildir.
 
+**Açıklama önbelleğinin isabet oranı (simülasyon, Claude yok).** `python tests\onbellek_simulasyon.py`: veri setindeki her kural tetikleyen işlem bir `/explain-risk` isteği sayılır, aynı anahtarı paylaşanlar önbellekten gelir (tam çıktı: [`docs/ONBELLEK_SIMULASYON.md`](docs/ONBELLEK_SIMULASYON.md)). Yalnız "suspicious" işlemler (401 istek) için:
+
+| Anahtar | Farklı anahtar (= Claude çağrısı) | İsabet üst sınırı |
+|---|---|---|
+| A: etiket + rule_ids (ilk plan) | 7 | %98,3 |
+| B: + skor + z'li neden metni (ilk uygulama) | 145 | %63,8 |
+| C: + skor + z'siz neden metni (**şimdiki**) | 11 | %97,3 |
+
+Tüm kural tetikleyen 81.447 işlemde fark küçük (A %100, B %99,5, C %100), çünkü çoğu işlemin kural kümesi basit. Fark, "suspicious" işlemlerdeki tutar sapması (z) çeşitliliğinden geliyor. Bu bir **üst sınırdır**: her işlemi bir kez soran, sınırsız önbellekli varsayımsal bir akış. Gerçek trafikteki isabet oranı ölçülmedi. Canlı sunucuda denendi: aynı istek 16,1 sn (Claude) → 3,8 ms (önbellek); farklı tutarlı ama aynı kural kümeli istek 16 ms (önbellek).
+
 İz dosyalarında maliyeti görmek için çalıştırmadan önce:
 
 ```powershell
