@@ -21,7 +21,7 @@ Rehber PDF'i de repoda yok. MASAK'ın şüpheli işlem bildirim rehberini kendin
 
 ## Kurulum
 
-Gereksinim: Python 3.14 ile geliştirildi ve denendi (başka sürümleri denemedim). Komutlar Windows PowerShell için. `requirements.txt` sürümleri geliştirme ortamından alındı. Kurulum adımlarını sıfırdan temiz bir ortamda baştan sona henüz denemedim (aşağıdaki "Sınırlılıklar" bölümüne bak).
+Gereksinim: Python 3.14 ile geliştirildi ve denendi (başka sürümleri denemedim). Komutlar Windows PowerShell için. `requirements.txt` sürümleri geliştirme ortamından alındı. `pip install -r requirements.txt` komutunu temiz bir sanal ortamda denedim, kurulum çalıştı. Kurulumdan sonra testleri o ortamda ayrıca çalıştırmadım.
 
 ```powershell
 python -m venv .venv
@@ -204,7 +204,7 @@ documents/      rehber PDF'i (git'te yok)
 - **Süre garantisi sınırlı.** Her Claude isteği 60 sn ile sınırlı (2 yeniden deneme) ve ajanın toplam süresi 120 sn ile sınırlı. Ajan başarısız olduktan sonra çalışan açıklama basamağının ayrı bir toplam süre sınırı yok, yani Claude yavaşladığında (bağlantı açık ama cevap gelmiyor) en kötü durum gecikmesi belirsiz. Claude'a hiç ulaşılamayan senaryoda ölçtüğüm toplam süre 15,8 sn.
 - **Açıklama metni z sayısını yazmaz.** Maliyet için önbellek anahtarından ve Claude'a giden nedenlerden tutar sapması (z) çıkarıldı (bkz. `docs/ARCHITECTURE.md`). `reasons` alanı z'yi taşımaya devam eder. İsabet oranı yalnız simülasyonla (üst sınır) hesaplandı, gerçek trafikte ölçülmedi.
 - **Önbellek** bellekte tutulur: sunucu yeniden başlayınca silinir, birden çok süreçte paylaşılmaz, aynı anda gelen iki aynı istek ikisi de Claude'a gider.
-- **Kurulum ve fiyat doğrulanmadı.** `requirements.txt` ile temiz ortamda kurulum baştan sona denenmedi. Dolar cinsinden maliyetler resmi fiyat sayfasıyla karşılaştırılmadı. Token sayıları ve testler ölçülüp çalıştırıldı, bu iki madde değil.
+- **Fiyat doğrulanmadı.** Dolar cinsinden maliyetler resmi fiyat sayfasıyla karşılaştırılmadı. Token sayıları ve testler ölçülüp çalıştırıldı, bu madde değil. Temiz ortamda yalnızca `pip install -r requirements.txt` adımını denedim; testleri o ortamda çalıştırmadım.
 - **Model davranışı değişebilir.** Aynı girdiye her seferinde aynı cevap garanti değil (kullanılan modelde `temperature` desteklenmiyor).
 
 ## Gelecek çalışma
