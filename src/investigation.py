@@ -19,6 +19,7 @@ import agent_trace  # noqa: E402
 import investigation_checks as checks  # noqa: E402
 
 INCELEME_MAKS_ADIM = 6  # müşteri bilgisi + geçmiş (aynı adımda olabilir) + en çok 2 rehber araması + rapor
+INCELEME_SURE_SINIRI = 120.0  # sn: ölçülen en uzun inceleme ~27 sn; bunun üstü takılma demektir, API beklemesin
 
 # Taban: agent'ın sistem mesajı (kurallar 1-9). Yalnız "en fazla 5 cümle" sınırı raporla çelişir, kaldırılır.
 _TABAN = agent.SISTEM_MESAJI.replace(" (en fazla 5 cümle)", "", 1)
@@ -51,15 +52,16 @@ def gorev_metni(customer_id):
     return f"{customer_id} numaralı müşteriyi incele ve inceleme raporunu yaz."
 
 
-def incele_gorev(gorev, istemci=None, max_steps=INCELEME_MAKS_ADIM):
+def incele_gorev(gorev, istemci=None, max_steps=INCELEME_MAKS_ADIM, sure_siniri_sn=INCELEME_SURE_SINIRI):
     """Serbest metin görevi inceleme kurallarıyla çalıştırır. Döndürür: {"rapor", "bitis", "iz"}."""
-    s = agent.calistir(gorev, istemci=istemci, max_steps=max_steps, sistem_mesaji=INCELEME_SISTEM_MESAJI)
+    s = agent.calistir(gorev, istemci=istemci, max_steps=max_steps, sistem_mesaji=INCELEME_SISTEM_MESAJI,
+                       sure_siniri_sn=sure_siniri_sn)
     iz = agent_trace.iz_olustur(gorev, s, model=agent.MODEL, max_steps=max_steps, sistem_mesaji=INCELEME_SISTEM_MESAJI)
     return {"rapor": s["cevap"], "bitis": s["bitis"], "iz": iz}
 
 
-def incele(customer_id, istemci=None, max_steps=INCELEME_MAKS_ADIM):
-    return incele_gorev(gorev_metni(customer_id), istemci=istemci, max_steps=max_steps)
+def incele(customer_id, istemci=None, max_steps=INCELEME_MAKS_ADIM, sure_siniri_sn=INCELEME_SURE_SINIRI):
+    return incele_gorev(gorev_metni(customer_id), istemci=istemci, max_steps=max_steps, sure_siniri_sn=sure_siniri_sn)
 
 
 def musteri_no_oku(argv):

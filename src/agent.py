@@ -8,7 +8,8 @@ Bir sonraki araç, öncekinin sonucuna bağlı olabilir (ör. müşterinin hesap
 Döngü kontrolsüz kalmasın diye iki fren var (maliyet ve sonsuz döngü koruması):
   max_steps      : en fazla bu kadar Claude çağrısı (1 adım = 1 çağrı)
   token_butcesi  : toplam girdi+çıktı token bu değere ulaşınca yeni çağrı yapılmaz
-Durunca nedenini "bitis" alanı söyler: tamamlandi | adim_siniri | token_siniri | durdu:<stop_reason>
+  sure_siniri_sn : (isteğe bağlı) toplam süre bu değeri geçince yeni çağrı yapılmaz; API gibi kullanıcı bekleyen yerler için
+Durunca nedenini "bitis" alanı söyler: tamamlandi | adim_siniri | sure_siniri | token_siniri | durdu:<stop_reason>
 
 Çalıştır:
   python src\\agent.py "1 numaralı müşterinin ilk hesabından Mobile kanalıyla 20000 TL, yurtiçi, başarılı bir işlem yapılırsa riski nedir?"
@@ -31,6 +32,8 @@ from tool_calling import MAKS_TOKEN, MODEL  # noqa: E402  (aynı model ve düş�
 from tools.banking_tools import TOOL_SCHEMAS, tool_calistir  # noqa: E402
 
 MAKS_ADIM = 5
+CLAUDE_ZAMAN_ASIMI = 60.0  # sn: TEK bir Claude isteği bu kadar sürerse hata verir (asılı kalmasın). Toplam süre için sure_siniri_sn var
+CLAUDE_YENIDEN_DENEME = 2  # SDK'nın geçici hatalarda (bağlantı kopması, 429, 5xx) kendiliğinden yaptığı yeniden deneme sayısı
 TOKEN_BUTCESI = 30000  # ~2500 girdi token/çağrı ölçüldü (Gün 14), 5 adım yaklaşık 15000
 
 TEMEL_KURALLAR = (
@@ -70,7 +73,7 @@ def _ms(baslangic):
 def _claude():
     global _istemci
     if _istemci is None:
-        _istemci = anthropic.Anthropic()
+        _istemci = anthropic.Anthropic(timeout=CLAUDE_ZAMAN_ASIMI, max_retries=CLAUDE_YENIDEN_DENEME)
     return _istemci
 
 
@@ -92,11 +95,14 @@ def _araclari_calistir(istekler):
     return bloklar, kayitlar
 
 
-def calistir(gorev, istemci=None, max_steps=MAKS_ADIM, token_butcesi=TOKEN_BUTCESI, sistem_mesaji=SISTEM_MESAJI):
+def calistir(gorev, istemci=None, max_steps=MAKS_ADIM, token_butcesi=TOKEN_BUTCESI, sistem_mesaji=SISTEM_MESAJI,
+             sure_siniri_sn=None):
     """Döndürür: {"cevap", "bitis", "sure_ms", "kullanim", "adimlar": [{adim, durum, araclar, girdi_token, cikti_token,
     sure_ms}]}. Her araç kaydında da sure_ms var (çalıştırılmadıysa None)."""
     if max_steps < 1:
         raise ValueError("max_steps en az 1 olmalı")
+    if sure_siniri_sn is not None and not sure_siniri_sn > 0:
+        raise ValueError("sure_siniri_sn pozitif olmalı (ya da None)")
     istemci = istemci or _claude()
     mesajlar = [{"role": "user", "content": gorev}]
     adimlar = []
@@ -135,6 +141,8 @@ def calistir(gorev, istemci=None, max_steps=MAKS_ADIM, token_butcesi=TOKEN_BUTCE
         toplam = kullanim["girdi"] + kullanim["cikti"]
         if adim >= max_steps:
             bitis, neden = "adim_siniri", f"adım sınırı (max_steps={max_steps})"
+        elif sure_siniri_sn is not None and _ms(t_basla) >= sure_siniri_sn * 1000:
+            bitis, neden = "sure_siniri", f"süre sınırı ({sure_siniri_sn:g} sn)"
         elif toplam >= token_butcesi:
             bitis, neden = "token_siniri", f"token bütçesi ({toplam}/{token_butcesi})"
         else:

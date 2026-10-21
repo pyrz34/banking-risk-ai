@@ -125,6 +125,61 @@ kontrol("Süre: gerçek saatle de tam sayı ve sıfırdan büyük değil eşit/b
         isinstance(s["sure_ms"], int) and s["sure_ms"] >= 0 and all(isinstance(a["sure_ms"], int) and a["sure_ms"] >= 0 for a in s["adimlar"])
         and s["adimlar"][0]["araclar"][0]["sure_ms"] >= 0)
 
+# ---------- Gün 19: zaman aşımı ve toplam süre sınırı ----------
+import anthropic  # noqa: E402
+
+yakalanan = {}
+
+
+class SahteAnthropic:
+    def __init__(self, **kw):
+        yakalanan.update(kw)
+
+
+asil_anthropic, asil_istemci = anthropic.Anthropic, agent._istemci
+anthropic.Anthropic, agent._istemci = SahteAnthropic, None
+try:
+    ilk = agent._claude()
+    ikinci = agent._claude()
+finally:
+    anthropic.Anthropic, agent._istemci = asil_anthropic, asil_istemci
+kontrol("Claude istemcisi zaman aşımı ve yeniden deneme ayarıyla kurulur, tek kez (aynı nesne)",
+        yakalanan == {"timeout": agent.CLAUDE_ZAMAN_ASIMI, "max_retries": agent.CLAUDE_YENIDEN_DENEME} and ilk is ikinci
+        and 0 < agent.CLAUDE_ZAMAN_ASIMI <= 120 and 0 <= agent.CLAUDE_YENIDEN_DENEME <= 5, yakalanan)
+
+
+def saatli(c, **kw):
+    agent._saat = SahteSaat()
+    try:
+        return agent.calistir("g", istemci=c, **kw)
+    finally:
+        agent._saat = gercek_saat
+
+
+c = SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use"), cevap([metin_blok("T")], "end_turn"))
+s = saatli(c, sure_siniri_sn=1.0)
+kontrol("Süre sınırı: araç isteği geldiğinde süre aşılmışsa yeni çağrı yok, bitis=sure_siniri, araç çalıştırılmadı, notta süre var",
+        len(c.cagrilar) == 1 and s["bitis"] == "sure_siniri" and s["adimlar"][0]["araclar"][0]["calistirildi"] is False
+        and "süre sınırı (1 sn)" in s["cevap"], s)
+c = SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use"), cevap([metin_blok("T")], "end_turn"))
+s = saatli(c, sure_siniri_sn=60)
+kontrol("Süre sınırı: süre dolmadıysa döngü sürer", len(c.cagrilar) == 2 and s["bitis"] == "tamamlandi")
+c = SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use"), cevap([metin_blok("T")], "end_turn"))
+s = saatli(c, sure_siniri_sn=None)
+kontrol("Süre sınırı verilmezse (None) hiç devreye girmez", s["bitis"] == "tamamlandi")
+c = SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use"))
+s = saatli(c, max_steps=1, sure_siniri_sn=0.001)
+kontrol("Süre sınırı ve adım sınırı birlikte: adım sınırı önce kontrol edilir", s["bitis"] == "adim_siniri")
+c = SahteClaude(cevap([arac_blok("a", "get_customer_info", M1)], "tool_use", 600, 600))
+s = saatli(c, sure_siniri_sn=0.001, token_butcesi=1000)
+kontrol("Süre sınırı ve token sınırı birlikte: süre önce kontrol edilir", s["bitis"] == "sure_siniri")
+for kotu in (0, -1, float("nan")):
+    try:
+        agent.calistir("g", istemci=SahteClaude(), sure_siniri_sn=kotu)
+        kontrol(f"sure_siniri_sn={kotu} ValueError", False)
+    except ValueError:
+        kontrol(f"sure_siniri_sn={kotu} -> ValueError", True)
+
 # ---------- sıralı iki araç (bağımlı) ----------
 c = SahteClaude(
     cevap([arac_blok("a", "get_customer_info", M1)], "tool_use", 100, 10),
