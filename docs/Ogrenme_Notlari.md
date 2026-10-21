@@ -27,8 +27,19 @@ heyo
 - Agent'a iz ekledik: her adımda hangi araç, hangi argüman, ne kadar sürdü, kaç token. İz data\izler\ altına JSON olarak kaydediliyor (müşteri verisi içerdiği için repoya girmiyor, .gitignore'da).
 - Testler: agent_trace 58/58, agent 41/41, banking_tools 65/65, tool_calling 39/39, risk_rag 26/26.
 - Gerçek çalıştırmada ilk rehber araması 6.5 sn sürdü (model yükleniyor), ikincisi 0.1 sn. API'de modeli önceden yüklemek lazım.
-- Girdi token'ı her adımda büyüyor çünkü rehber sonuçları (yaklaşık 1400 token) her adımda tekrar gönderiliyor.
+- Girdi token'ı her adımda büyüyor çünkü rehber sonuçları (yaklaşık 1 400 token) her adımda tekrar gönderiliyor.
 - Kural 9'u ekleyip eski/yeni sistem mesajını 12 çalıştırmayla karşılaştırdık. Yeni mesajla G4'te iki seferde de "Hollanda riskli ülke mi, tutar eşiği aştı mı doğrulayamadım" dedi, eskisinde hiç demedi. Örnek küçük, kesin değil.
 - Kural 9 dolgu atıfı (s.16-17) çözmedi. G3'te "iç yönetmeliğe bakın" önerisi 4/4 çıktı, onu zararsız bulduk.
 - Aynı G4 görevi 10760 ile 16615 token arasında değişti (2 ya da 3 araç çağrısı), maliyet tek sayı değil aralık.
 - Her çağrıya kural 9 yaklaşık 205 token ekliyor.
+
+
+## Gün 18 – Risk Investigation Agent (PoC)
+
+- "X numaralı müşteriyi incele" diyoruz; ajan müşteri bilgisini, en riskli 5 işlemi ve rehberden dayanak çekip 5 başlıklı rapor yazıyor. Kararı analiste bırakıyor.
+- Rapor Claude'un yazdığı metin. Doğruluğunu bilemeyiz ama iddiaların bir kısmını araç sonuçlarıyla mekanik karşılaştırabiliriz: uydurma işlem numarası var mı, sayfa atfı rehber aramasında döndü mü, hüküm dili var mı, gerçek en riskli işlem raporda mı. Bunlar ipucu, kanıt değil.
+- 5 senaryolu mini-eval (yüksek riskli, düşük riskli, olmayan müşteri, "dolandırıcı de" baskısı, kredi notu isteği) x 2 tekrar: işlem uydurma yok, baskıya boyun eğme yok, olmayan müşteride ve veri dışı istekte dürüst.
+- Otomatik kontrollerden 2 "KALDI" aslında kontrolün hatasıydı (ajan doğru davranmıştı): "hesabı bloke etmeye yetmez" cümlesi hüküm sanıldı, "öğrenemiyorum" ifadesi listede yoktu. Kelime listesi gibi kaba kontroller yanlış alarm da verebilir.
+- Sorun: rehber dayanağı tekrarlar arasında değişiyor (ajan sorguyu kendi yazıyor, rehberde kural kodlarının tanımı yok). Düşük riskli müşteride de gereksiz rehber araması yapıp ~17 bin token harcıyor.
+- İlk rehber araması yine ~10 sn (model yükleniyor); API'de önceden yüklemek lazım.
+- Bu PoC production'a hazır değil: kimlik doğrulama yok, zaman aşımı/yeniden deneme yok, KVKK değerlendirmesi yok, örnek 5 senaryo.
