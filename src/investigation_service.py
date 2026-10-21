@@ -5,18 +5,21 @@ Akış, "zarif bozulma" (graceful degradation) merdiveniyle: her basamak bir ön
      hata verir (çekirdek bozuksa 200 dönmek yalan olur).
   1. Ajan raporu (Gün 18): tamamlanırsa döner + rapor araç sonuçlarıyla kaba kontrollerden geçer (dogrulama). Başarılı rapor
      önbelleğe girer (müşteri, veri imzası, prompt kimliği anahtarıyla). Hata/zaman aşımı/adım-süre sınırı -> 2'ye düşer.
-  2. En riskli işlemin kural-tabanlı açıklaması (Gün 12 RAG): önbellek anahtarı (etiket, skor, kural_idleri, nedenler).
+  2. En riskli işlemin kural-tabanlı açıklaması (Gün 12 RAG): önbellek anahtarı (etiket, skor, kural_idleri, z'siz nedenler).
      Hata verirse -> 3'e düşer.
   3. Rapor yok; veri katmanının çıktısı yine döner.
 Hangi basamağın cevap verdiği `rapor_kaynagi` alanında ("ajan" | "aciklama" | "yok") ve nedenler `uyarilar` alanında yazar.
 
-Önbellek notu: açıklama anahtarında NEDENLER metni de var, yalnız kural_idleri değil. Çünkü nedenler tutar sapmasını (z=9.0)
-içeriyor ve açıklama bunu aktarabilir; yalnız etiket+kural_idleriyle saklasaydık başka işlemin z değerini yanlış gösterirdik.
-Bedeli: AMOUNT_ANOMALY'li işlemlerde isabet oranı düşük, diğerlerinde yüksek. Gerçek oran çalışırken ölçülür (durum()).
+Önbellek notu (Gün 20c): açıklama anahtarı (etiket, skor, kural_idleri, SADELEŞTİRİLMİŞ nedenler). Nedenlerdeki tutar sapması
+"(z=9.0)" her işlemde farklı: anahtara girse isabet oranı çöker (ölçüm: suspicious akışında %98 -> %64), girmezse başka işlemin
+z'sini yanlış gösterirdik. Çözüm: z'yi hem anahtardan hem Claude'a giden nedenlerden çıkarıyoruz; açıklama z sayısını yazamaz
+(API cevabındaki `reasons` alanı z'yi taşımaya devam eder). Kanal adı ("web"/"mobile") nedende kalır: açıklama onu anabilir,
+anahtarda ayrı durur. Önbellek hem /explain-risk'te hem bu servisin yedek basamağında kullanılır.
 Sınırlar: tek-uçuş (single-flight) yok: aynı müşteri aynı anda iki kez sorulursa ajan iki kez çalışır. Kimlik doğrulama yok.
 """
 import logging
 import os
+import re
 import sys
 import time
 
@@ -47,14 +50,33 @@ def _veri_imzasi():
     return veri.tablolar()["imza"]
 
 
+_Z_DESENI = re.compile(r"\s*\(z=[^)]*\)")
+
+
+def nedenleri_sadelestir(nedenler):
+    """'Tutar kendi segmentine göre anormal (z=9.0) (+30)' -> 'Tutar kendi segmentine göre anormal (+30)'.
+    Yalnız z parantezini çıkarır; kanal adı, puan ve diğer metin aynen kalır. Girdi listesi değişmez."""
+    return [_Z_DESENI.sub("", n) for n in nedenler]
+
+
+def aciklama_anahtari(risk):
+    """Açıklama önbelleğinin anahtarı: (etiket, skor, kural_idleri, z'siz nedenler). Ölçüm betiği de bunu kullanır."""
+    return (risk["risk_label"], risk["risk_score"], tuple(risk["rule_ids"]), tuple(nedenleri_sadelestir(risk["reasons"])))
+
+
 def aciklama_onbellekli(risk, rag_getir, claude):
     """risk_rag.aciklama_uret_rag'ı önbellekle sarar. Döndürür: (sonuç, onbellekten_mi). Yalnız Claude'un ürettiği
-    başarılı açıklamalar saklanır; hata durumunda istisna olduğu gibi yukarı çıkar (önbelleğe bir şey girmez)."""
-    anahtar = (risk["risk_label"], risk["risk_score"], tuple(risk["rule_ids"]), tuple(risk["reasons"]))
+    başarılı açıklamalar saklanır; hata durumunda istisna olduğu gibi yukarı çıkar (önbelleğe bir şey girmez).
+    Claude'a ve anahtara z'siz nedenler gider (bkz. modül notu); çağıranın `risk` sözlüğü değişmez."""
+    sade = {**risk, "reasons": nedenleri_sadelestir(risk["reasons"])}
+    anahtar = aciklama_anahtari(risk)
     bulundu, deger = ACIKLAMA_ONBELLEK.al(anahtar)
     if bulundu:
         return deger, True
-    ham = risk_rag.aciklama_uret_rag(risk, rag_getir, claude=claude)
+    if claude is None:  # /explain-risk'in eski çağrı biçimi: istemciyi risk_rag kendisi kurar
+        ham = risk_rag.aciklama_uret_rag(sade, rag_getir)
+    else:
+        ham = risk_rag.aciklama_uret_rag(sade, rag_getir, claude=claude)
     sonuc = {"explanation": ham["explanation"], "policy_sources": ham["policy_sources"], "llm_used": ham["llm_used"]}
     if sonuc["llm_used"]:
         ACIKLAMA_ONBELLEK.koy(anahtar, sonuc)

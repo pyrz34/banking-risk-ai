@@ -281,10 +281,40 @@ try:
     kontrol("Açıklama önbelleği: aynı etiket+skor+kural+neden -> ikinci çağrı önbellekten, Claude'a yeni çağrı yok", (h1, h2) == (False, True) and len(cagri) == 1 and a1 == a2)
     rk2 = {**rk, "reasons": ["Riskli kanal: web (+15)", "Tutar anormal (z=7.2) (+30)"]}
     _, h3 = svc.aciklama_onbellekli(rk2, SAHTE_RAG, "claude")
-    kontrol("Açıklama önbelleği: kurallar aynı ama z değeri farklıysa ISKA (yanlış z'yi başka işleme göstermeyiz)", h3 is False and len(cagri) == 2)
+    kontrol("Açıklama önbelleği: kurallar aynı, yalnız z farklı -> İSABET (z anahtarda yok: isabet oranı için; açıklama z yazmaz)",
+            h3 is True and len(cagri) == 1)
+    rk_kanal = {**rk, "reasons": ["Riskli kanal: mobile (+15)", "Tutar anormal (z=9.0) (+30)"]}
+    _, h_kanal = svc.aciklama_onbellekli(rk_kanal, SAHTE_RAG, "claude")
+    kontrol("Açıklama önbelleği: kanal adı farklıysa (web/mobile) ISKA, çünkü açıklama kanalı anabilir", h_kanal is False and len(cagri) == 2)
+    kontrol("nedenleri_sadelestir: yalnız z parantezi gider; kanal, puan, diğer metin ve girdi listesi aynen kalır",
+            svc.nedenleri_sadelestir(rk["reasons"]) == ["Riskli kanal: web (+15)", "Tutar anormal (+30)"]
+            and rk["reasons"][1] == "Tutar anormal (z=9.0) (+30)")
+    kontrol("nedenleri_sadelestir: z=inf, z=nan, z yokken, boş liste",
+            svc.nedenleri_sadelestir(["A (z=inf) (+30)", "B (z=nan) (+1)", "Yurtdışı işlem (+25)"]) == ["A (+30)", "B (+1)", "Yurtdışı işlem (+25)"]
+            and svc.nedenleri_sadelestir([]) == [])
+    yakalanan = []
+
+    def kaydeden(risk_, rag_getir_, claude=None, **ayar):
+        yakalanan.append(risk_)
+        return {"explanation": "x", "policy_sources": [], "llm_used": True, "usage": object()}
+
+    svc.ACIKLAMA_ONBELLEK.temizle()
+    risk_rag.aciklama_uret_rag = kaydeden
+    svc.aciklama_onbellekli(rk, SAHTE_RAG, "claude")
+    kontrol("Claude'a giden risk sözlüğünde z yok (nedenler sadeleşmiş), diğer alanlar aynı; çağıranın sözlüğü değişmedi",
+            yakalanan[0]["reasons"] == ["Riskli kanal: web (+15)", "Tutar anormal (+30)"]
+            and yakalanan[0]["risk_score"] == 70 and yakalanan[0]["rule_ids"] == rk["rule_ids"]
+            and rk["reasons"][1] == "Tutar anormal (z=9.0) (+30)")
+    svc.ACIKLAMA_ONBELLEK.temizle()
+    risk_rag.aciklama_uret_rag = sahte_aciklama(sayac=cagri)
+    cagri.clear()
+    svc.aciklama_onbellekli(rk, SAHTE_RAG, "claude")
     rk3 = {**rk, "risk_score": 75}
     _, h4 = svc.aciklama_onbellekli(rk3, SAHTE_RAG, "claude")
-    kontrol("Açıklama önbelleği: skor farklıysa ISKA", h4 is False and len(cagri) == 3)
+    kontrol("Açıklama önbelleği: skor farklıysa ISKA", h4 is False and len(cagri) == 2)
+    rk4 = {**rk, "rule_ids": ["RISKY_CHANNEL", "INTERNATIONAL"], "reasons": ["Riskli kanal: web (+15)", "Yurtdışı işlem (+25)"]}
+    _, h5 = svc.aciklama_onbellekli(rk4, SAHTE_RAG, "claude")
+    kontrol("Açıklama önbelleği: kural kümesi farklıysa ISKA", h5 is False and len(cagri) == 3)
     svc.ACIKLAMA_ONBELLEK.temizle()
     risk_rag.aciklama_uret_rag = sahte_aciklama(llm=False)
     svc.aciklama_onbellekli({**rk, "reasons": [], "rule_ids": []}, SAHTE_RAG, None)
@@ -355,6 +385,47 @@ try:
     temiz()
     kontrol("API: eski uç noktalar bozulmadı (/predict-risk 200)",
             istemci.post("/predict-risk", json={"account_id": 1, "amount": 100, "status": "OK", "channel": "ATM", "is_international": 0}).status_code == 200)
+
+    # /explain-risk artık açıklama önbelleğinden geçer (RAG'li çağrı pahalı: ~4x). Aynı kural kümesi 2. kez Claude'a gitmez.
+    temiz()
+    gelen = []
+
+    def kaydeden_api(risk_, rag_getir_, claude=None, **ayar):
+        gelen.append(risk_)
+        return {"explanation": "Önbellek testi açıklaması.", "policy_sources": [], "llm_used": True, "usage": object()}
+
+    risk_rag.aciklama_uret_rag = kaydeden_api
+    P1 = {"account_id": 2, "amount": 14717, "status": "OK", "channel": "Web", "is_international": 1}
+    e1 = istemci.post("/explain-risk", json=P1)
+    j1 = e1.json()
+    kontrol("/explain-risk: 200, açıklama geldi, cevaptaki reasons z'yi taşıyor (z yalnız açıklamadan çıkarıldı)",
+            e1.status_code == 200 and j1["explanation"] == "Önbellek testi açıklaması." and j1["llm_used"] is True
+            and any("z=" in r for r in j1["reasons"]), e1.text[:200])
+    kontrol("/explain-risk: Claude'a giden nedenlerde z yok", len(gelen) == 1 and all("z=" not in r for r in gelen[0]["reasons"]), gelen[:1])
+    e2 = istemci.post("/explain-risk", json=P1)
+    kontrol("/explain-risk: aynı istek ikinci kez -> Claude'a yeni çağrı yok, aynı açıklama", len(gelen) == 1 and e2.json()["explanation"] == j1["explanation"])
+    e3 = istemci.post("/explain-risk", json={**P1, "amount": 16000})
+    j3 = e3.json()
+    kontrol("/explain-risk: tutar (dolayısıyla z) farklı ama aynı kural kümesi -> önbellekten (isabet oranı için asıl kazanç)",
+            e3.status_code == 200 and j3["rule_ids"] == j1["rule_ids"] and j3["reasons"] != j1["reasons"] and len(gelen) == 1,
+            (j3["reasons"], j1["reasons"], len(gelen)))
+    e4 = istemci.post("/explain-risk", json={**P1, "channel": "Mobile"})
+    kontrol("/explain-risk: kanal farklıysa (Mobile) yeni çağrı", e4.status_code == 200 and len(gelen) == 2)
+    d = istemci.get("/onbellek-durumu").json()
+    kontrol("/onbellek-durumu: açıklama önbelleği isabet 2, ıska 2 sayar", d["aciklama"]["isabet"] == 2 and d["aciklama"]["iska"] == 2, d)
+    risk_rag.aciklama_uret_rag = ASIL["aciklama"]  # gerçek fonksiyon: nedenler boşsa Claude'a ve rehbere hiç gitmez
+    e5 = istemci.post("/explain-risk", json={"account_id": 1, "amount": 100, "status": "OK", "channel": "ATM", "is_international": 0})
+    kontrol("/explain-risk: kural tetiklenmediyse Claude çağrılmaz, sabit cümle, önbelleğe girmez",
+            e5.status_code == 200 and e5.json()["llm_used"] is False and len(gelen) == 2 and len(svc.ACIKLAMA_ONBELLEK) == 2, e5.text[:200])
+    risk_rag.aciklama_uret_rag = patla
+    svc.ACIKLAMA_ONBELLEK.temizle()
+    e6 = istemci.post("/explain-risk", json=P1)
+    kontrol("/explain-risk: açıklama çökerse HÂLÂ 200, risk sonucu döner, llm_used False, sabit metin, önbelleğe bir şey girmez",
+            e6.status_code == 200 and e6.json()["llm_used"] is False and e6.json()["risk_score"] == 70
+            and "üretilemedi" in e6.json()["explanation"] and len(svc.ACIKLAMA_ONBELLEK) == 0, e6.text[:200])
+    e7 = istemci.post("/explain-risk", json={**P1, "account_id": 999999})
+    kontrol("/explain-risk: olmayan hesap hâlâ 404", e7.status_code == 404)
+    temiz()
 
     # =========================================================== şema, gerçek veri satırlarıyla
     hatali = []

@@ -189,6 +189,8 @@ def patla(*a, **k):
 risk_rag.aciklama_uret_rag = patla
 import logging  # noqa: E402
 logging.getLogger("risk_api").disabled = True  # api bu hatayı bilerek loglar, test çıktısı kirlenmesin
+import investigation_service  # noqa: E402
+investigation_service.ACIKLAMA_ONBELLEK.temizle()  # Gün 20c: /explain-risk önbellekli; önceki "Sahte." açıklaması hata yolunu gizlemesin
 e = istemci.post("/explain-risk", json=TEMEL)
 logging.getLogger("risk_api").disabled = False
 j = e.json()

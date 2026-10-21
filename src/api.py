@@ -198,9 +198,11 @@ def rag_getir():
 def explain_risk(islem: TransactionRequest):
     risk = risk_hesapla(islem)  # bu kısım hata verirse (404 gibi) olduğu gibi döner
     try:
-        from risk_rag import aciklama_uret_rag
+        from investigation_service import aciklama_onbellekli
 
-        sonuc = aciklama_uret_rag(risk, rag_getir)
+        # Önbellekli: aynı kural kümesi/etiket/skor için Claude'a ikinci kez gidilmez (maliyet ve süre). Açıklamadaki
+        # tutar sapması (z) sayısı yazılmaz; `reasons` alanı z'yi taşımaya devam eder.
+        sonuc, _ = aciklama_onbellekli(risk, rag_getir, None)
     except Exception:
         # Açıklama ek bir özellik: LLM/rehber tarafı çökse bile risk sonucu yine dönmeli.
         logger.exception("Açıklama üretilemedi")

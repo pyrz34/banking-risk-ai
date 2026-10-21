@@ -53,7 +53,7 @@ uvicorn api:app --app-dir src
 | Uç nokta | Ne yapar | Claude kullanır mı |
 |---|---|---|
 | `POST /predict-risk` | İşlem → skor, etiket, nedenler, kural kimlikleri | Hayır |
-| `POST /explain-risk` | Aynı + rehberden atıflı açıklama | Evet (kural tetiklenmediyse hayır) |
+| `POST /explain-risk` | Aynı + rehberden atıflı açıklama | Evet (kural tetiklenmediyse hayır; aynı kural kümesi önbellekten) |
 | `POST /investigate` | Müşteri incelemesi (aşağıda) | Evet |
 | `GET /onbellek-durumu` | Önbellek isabet/ıska sayıları | Hayır |
 
@@ -111,12 +111,15 @@ Her test dosyası `python tests\<ad>.py` ile çalışır, sonunda `N/N kontrol g
 | `banking_tools_testi.py` | 65 |
 | `tool_calling_testi.py` | 39 |
 | `investigation_testi.py` | 98 |
-| `investigate_testi.py` | 60 |
+| `investigate_testi.py` | 74 |
+| `onbellek_simulasyon_testi.py` | 10 |
 | `risk_rag_testi.py` | 26 |
 | `rag_degerlendirme_testi.py` | 21 |
 | `maliyet_olcum_testi.py` | 20 |
 
 **Gerçek Claude çağırır (küçük maliyet):** `held_out_testi.py`, `rag_cevap_testi.py`, `inceleme_degerlendirme.py` (ajan mini değerlendirmesi), `rag_degerlendirme.py`, `maliyet_olcum.py`.
+
+**Ücretsiz ölçüm:** `onbellek_simulasyon.py` açıklama önbelleğinin isabet oranı üst sınırını veri setinden hesaplar (Claude yok).
 
 **Diğer:** `arama_testi.py` yerel e5 modelini kullanır (Claude yok). `api_istek.py` çalışan sunucuya 7 istek atar.
 
@@ -158,7 +161,7 @@ Aynı işlemin (skor 70, 3 kural) farklı yollarla açıklatılması, `python te
 
 Okuma:
 - **RAG ek maliyet getiriyor:** bu işlemde girdi yaklaşık 5,3, çıktı 4,2, süre 3,2, tahmini maliyet 4,3 kat. Girdi artışı rehber parçalarından. Çıktı artışının büyük kısmı düşünme (thinking) tokenleridir ve RAG'li istem Claude'a "hangi kaynak doğrudan karşılık veriyor" diye ek düşündürdüğü için şişiyor. RAG'siz ve RAG'li istemler farklı olduğundan, fark yalnız "rehber verisi" farkı değil, "rehber verisi + onu kullanma kuralları" farkıdır.
-- **Önbellek isabeti Claude'a gitmez:** 0 token, ihmal edilebilir süre. Bir ajan incelemesi ıskada yaklaşık 0,003 USD ve 18 sn, isabette ~45 ms (veri katmanı yine çalıştığı için sıfır değil).
+- **Önbellek isabeti Claude'a gitmez** (`/explain-risk` ve `/investigate` önbellekli): 0 token, ihmal edilebilir süre. Bir ajan incelemesi ıskada yaklaşık 0,003 USD ve 18 sn, isabette ~45 ms (veri katmanı yine çalıştığı için sıfır değil).
 - **Ölçülmeyenler:** gerçek kullanımdaki önbellek isabet **oranı** (trafik olmadan ölçülemez). Tek işlem ve az tekrar, yani bir büyüklük sırasıdır, ortalama değildir.
 
 İz dosyalarında maliyeti görmek için çalıştırmadan önce:
@@ -189,6 +192,7 @@ documents/      rehber PDF'i (git'te yok)
 - **Ajan değerlendirmesi küçük** (5 senaryo, birkaç tekrar). Rapor kontrolleri (`uydurma_islem_yok`, `atif_gecerli`, `hukum_yok` vb.) kaba kural tabanlı ipuçlarıdır, kanıt değildir. Örneğin ülke kodu gibi sayısal olmayan iddiaları denetlemez.
 - **Güvenlik:** kimlik doğrulama yok, KVKK/mevzuat değerlendirmesi yapılmadı. Müşteri verisi içeren iz dosyaları diskte duruyor.
 - **Süre garantisi sınırlı.** Her Claude isteği 60 sn ile sınırlı (2 yeniden deneme) ve ajanın toplam süresi 120 sn ile sınırlı. Ajan başarısız olduktan sonra çalışan açıklama basamağının ayrı bir toplam süre sınırı yok, yani Claude yavaşladığında (bağlantı açık ama cevap gelmiyor) en kötü durum gecikmesi belirsiz. Claude'a hiç ulaşılamayan senaryoda ölçtüğüm toplam süre 15,8 sn.
+- **Açıklama metni z sayısını yazmaz.** Maliyet için önbellek anahtarından ve Claude'a giden nedenlerden tutar sapması (z) çıkarıldı (bkz. `docs/ARCHITECTURE.md`). `reasons` alanı z'yi taşımaya devam eder. İsabet oranı yalnız simülasyonla (üst sınır) hesaplandı, gerçek trafikte ölçülmedi.
 - **Önbellek** bellekte tutulur: sunucu yeniden başlayınca silinir, birden çok süreçte paylaşılmaz, aynı anda gelen iki aynı istek ikisi de Claude'a gider.
 - **Model davranışı değişebilir.** Aynı girdiye her seferinde aynı cevap garanti değil (kullanılan modelde `temperature` desteklenmiyor).
 

@@ -115,9 +115,17 @@ Müşteri varsa yanıt her zaman 200. Otomatik kontrolleri geçmeyen bir ajan ra
 | Önbellek | Anahtar | Ne saklanır |
 |---|---|---|
 | Rapor (128) | (müşteri, **veri imzası**, istem kimliği) | Tamamlanan ajan raporu, kontroller, iz özeti |
-| Açıklama (256) | (etiket, skor, `rule_ids`, **neden metinleri**) | Claude'un ürettiği açıklama |
+| Açıklama (256) | (etiket, skor, `rule_ids`, **z'siz nedenler**) | Claude'un ürettiği açıklama |
 
-Anahtarda veri imzası var: Excel değişirse eski rapor kullanılmaz. Açıklama anahtarına `reasons` metinleri de girer, çünkü kural kimlikleri aynı olsa da `z` değeri farklı olabilir ve yanlış sayıyı başka işlemin açıklamasında göstermek istemedim. Hatalı/yarım sonuçlar ve Claude'un üretmediği sabit metinler saklanmaz. Değerler kopyalanarak verilir/alınır. Aynı anda gelen iki aynı istek ikisi de hesaplanır (tek-uçuş yok), süreç yeniden başlayınca önbellek boşalır. Önceki plan sadece `etiket + sıralı rule_ids` anahtarı öneriyordu, bunu bilerek genişlettim.
+Anahtarda veri imzası var: Excel değişirse eski rapor kullanılmaz. Hatalı/yarım sonuçlar ve Claude'un üretmediği sabit metinler saklanmaz. Değerler kopyalanarak verilir/alınır. Aynı anda gelen iki aynı istek ikisi de hesaplanır (tek-uçuş yok), süreç yeniden başlayınca önbellek boşalır.
+
+**Açıklama önbelleği ve anahtar seçimi (maliyet kararı).** RAG'li bir açıklama RAG'siz olandan yaklaşık 4 kat pahalı (README, Maliyet), yani önbelleğin asıl değeri burada. Önbellek hem `/explain-risk`'te hem `/investigate`'in yedek basamağında kullanılır. Anahtar kararı üç aşamadan geçti:
+
+1. **Plan:** `etiket + rule_ids`. Çok yüksek isabet, ama nedenler `z=9.0` gibi her işlemde farklı bir sayı taşıyor ve açıklama bunu aktarabilir; aynı anahtarla saklarsak başka işlemin z'sini yanlış gösteririz.
+2. **İlk uygulamam:** nedenlerin tamamı (z dahil) anahtarda. Doğruluk korunur, ama ölçünce (`tests/onbellek_simulasyon.py`) isabet oranı çöküyordu: "suspicious" akışında üst sınır yaklaşık %98'den %64'e, Claude çağrısı sayısı ~20 kat. Maliyet öncelikli bir proje için yanlış takas.
+3. **Şimdiki:** z hem Claude'a giden nedenlerden hem anahtardan çıkarılır (`nedenleri_sadelestir`). Kanal adı ("web"/"mobile") nedende kalır, çünkü açıklama onu anabilir ve anahtarda ayrı durur. Böylece doğruluk (başka işlemin sayısı gösterilmez) ve isabet oranı (üst sınır yaklaşık %97) birlikte korunur. Bedeli: açıklama metni z sayısını yazamaz. API cevabındaki `reasons` alanı z'yi taşımaya devam eder, yani bilgi kaybı yok, yalnızca açıklama cümlesinde yok.
+
+Simülasyon bir **üst sınırdır**: her işlemi bir kez soran, sınırsız önbellekli, varsayımsal bir akış. Gerçek trafikteki isabet oranı ölçülmedi.
 
 **Isıtma.** Açılışta Excel ve e5 yüklenir (birkaç sn). Aksi halde ilk rehber aramasında 6,5-10 sn bekleniyor. Isıtma başarısız olsa sunucu açılır, model ilk gerçek istekte yüklenir. `RAG_ISITMA=0` ile kapatılır.
 
