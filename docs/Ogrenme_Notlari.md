@@ -63,3 +63,19 @@ heyo
 - `api.py` 133 değil 142 satırdı. Fark formatlayıcının (black) satır bölmesiydi, mantık aynıydı. `git diff` boştu, o yüzden güvenle üstüne yazdım.
 
 **Henüz yapmadığım:** kimlik doğrulama yok, toplam süre sınırı sadece ajan için var, KVKK değerlendirmesi yapılmadı. "Production-ready" değil, PoC.
+## Gün 20 – Finalizasyon: belgeler, maliyet ölçümü, önbellek düzeltmesi
+
+**Ne yaptım:** Kullanılmayan `llm_explain.py` ve boş `agent_audit.py` dosyalarını sildim, testler hâlâ geçti. Gizli anahtar geçmişini kontrol ettim: `git log -S"sk-ant"` iki commit gösterdi ama ikisi de sadece "bunu kontrol et" yazan belge satırlarıymış, gerçek anahtar yoktu. Eski README ve ARCHITECTURE Gün 1-7'de kalmıştı, ikisini baştan yazdırdım. `requirements.txt`'i sürümlü hale getirdim.
+
+**Önbellek ve RAG maliyeti (ölçtüm):**
+- Aynı işlemi RAG'siz açıklatmak 369 girdi + 406 çıktı token, 2,5 sn; RAG'li açıklatmak 1974 girdi + 1691 çıktı token, 8 sn. Yani RAG'li yol yaklaşık 4 kat pahalı. Çıktı artışının büyük kısmı düşünme tokenlerinden.
+- Önbellek isabeti Claude'a gitmiyor: 0 token. Canlı sunucuda aynı istek 16,1 sn'den 3,8 ms'ye düştü.
+- Kırılma noktası: ben "cache önemli" deyince, önbellek anahtarını yanlış seçtiğimizi gördük. Anahtarda tutar sapması (z) olunca isabet oranı üst sınırı %98'den %64'e düşüyordu. Üstelik `/explain-risk`'te hiç önbellek yoktu, yani pahalı yerde cache yoktu. Düzelttik: z'yi anahtardan ve Claude'a giden nedenlerden çıkardık, kanal adı (web/mobile) kalıyor. Bedeli: açıklama cümlesi z sayısını yazmıyor, `reasons` alanında z duruyor.
+- Dersim: "bir şeyi doğru yapıyorum" ile "ölçtüm" aynı şey değil. Anahtarı yanlış seçtiğimi ancak simülasyon yapınca gördüm. Simülasyon bir üst sınır, gerçek trafikte isabet oranını ölçmedim.
+
+**Takıldığım yerler:**
+- Alt paketlere bölmeyi yapmadık, nedeni: her import ve test yolu değişecekti, çalışan şeyi kırma riski kazançtan büyüktü. Modül haritasını belgeye yazdık.
+- `api.py` formatlayıcıyla 142 satıra çıkmıştı, 133 beklenirken. `git diff` boştu, mantık aynıydı.
+- Sandbox'taki rehber parçası sayısı (164) benim indeksimdekinden (257) farklıydı; belgeyi kendi sayıma göre düzelttirdim.
+
+**Henüz yapmadığım:** `requirements.txt`'in temiz bir ortamda kurulduğunu denemedim, resmi fiyat sayfasında Haiku 5.5 fiyatını teyit etmedim (dolar rakamları üçüncü taraf kaynağa dayanıyor). Önbellek isabet oranını gerçek trafikte ölçmedim.
