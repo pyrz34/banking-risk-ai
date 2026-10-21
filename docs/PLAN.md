@@ -1,9 +1,11 @@
 # PLAN: Gün 13–20 (kalan iş)
 
-Kaynak: kendi yol haritan (Gün 11–20 metinleri) + bizim konuşmalarda aldığımız kararlar.
-Gün 1–10 metinlerini görmedim; Gün 1–12 "bitti" kabul edildi (Gün 9 Vector DB için aşağıya bak).
+Kaynak: kendi yol haritam (Gün 11–20 metinleri) + Claude ile konuşmalarımızda aldığım kararlar.
 
-## Bitirdiğimiz yer
+Durum notu (21 Ekim 2026): Gün 13–20 üzerinde çalıştım; bu belge planın ilk halidir. Yapmadıklarım ve sınırlılıklar README'deki "Sınırlılıklar" ve "Gelecek çalışma" bölümlerinde.
+Gün 1–12'yi bitmiş sayıyorum (Gün 9 Vector DB için aşağıya bak).
+
+## Bitirdiğim yer
 
 | Parça | Durum |
 |---|---|
@@ -13,7 +15,7 @@ Gün 1–10 metinlerini görmedim; Gün 1–12 "bitti" kabul edildi (Gün 9 Vect
 | Gün 12 entegrasyonu (skor → kural → politika → LLM açıklama) | ✅ commit 652fee5 |
 | Vektör DB (Chroma/FAISS) | ⏸ atlandı (numpy + .npz, `ara()` tek değişim noktası) |
 
-## Roadmap kuralları (senin metninden, bağlayıcı)
+## Roadmap kuralları (kendi metnimden, benim için bağlayıcı)
 
 - Her gün sonu 5'li standart: **Concept, Mini demo, Project integration, Test, Commit.**
 - Kapsam kayması: bir konu uzarsa yeni konu ekleme, **sonrakini küçült.**
@@ -21,7 +23,7 @@ Gün 1–10 metinlerini görmedim; Gün 1–12 "bitti" kabul edildi (Gün 9 Vect
 - Agent bir **proof-of-concept**. "Production-ready banking agent" iddiası yok.
 - Deterministik işler tool/sistem tarafında kalır, agent her şeyi yapmaz.
 
-**Zaman baskısı yok** (kullanıcı onayladı, 14 Ekim 2026), bu yüzden aşağıdaki **EK** satırlarının hepsi yapılır. Ek ≈ 4 saat. Zaman bolluğu yeni teknoloji eklemek için değil, mevcut parçaları derinlemesine anlamak ve ölçmek için kullanılır.
+**Zaman baskısı yok** (14 Ekim 2026'da kendim böyle karar verdim), bu yüzden aşağıdaki **EK** satırlarının hepsi yapılır. Ek ≈ 4 saat. Zaman bolluğu yeni teknoloji eklemek için değil, mevcut parçaları derinlemesine anlamak ve ölçmek için kullanılır.
 
 ---
 
@@ -47,9 +49,9 @@ Gün 1–10 metinlerini görmedim; Gün 1–12 "bitti" kabul edildi (Gün 9 Vect
 **Çıktı:** User → LLM → tool seçimi → Python fonksiyonu → sonuç → LLM. **DONE:** LLM'in fonksiyonu seçip parametreyle çağırmasını anlıyorum.
 
 - Sıra: önce `get_risk_score()`, sonra `get_customer_info()`, `search_risk_policy()`.
-- Elimizdeki hazır parçalar: `risk_engine.calculate`, `risk_rag.politika_ara`, veri setindeki hesap sorgusu.
+- Elimdeki hazır parçalar: `risk_engine.calculate`, `risk_rag.politika_ara`, veri setindeki hesap sorgusu.
 - **EK 🔥** geçersiz argüman ve olmayan müşteri için tool hata davranışı (`{"error": ...}`), LLM'e hata da bir sonuç olarak döner.
-- **Öğrenme (kendi cümlenle):** LLM fonksiyonu **çalıştırmaz**, sadece hangi fonksiyonu hangi argümanla çağıracağını söyler. Çalıştıran Python'dur. Tool schema bu yüzden vardır.
+- **Öğrenme (kendi cümlemle):** LLM fonksiyonu **çalıştırmaz**, sadece hangi fonksiyonu hangi argümanla çağıracağını söyler. Çalıştıran Python'dur. Tool schema bu yüzden vardır.
 - **Commit:** `feat: tool calling with risk score tool (Day 14)`
 
 ## Gün 15: Agent Fundamentals (3–4 saat)
@@ -128,11 +130,11 @@ Kapsam kuralı zamandan bağımsız geçerli: bir konu uzarsa yeni konu ekleme, 
 
 ## Öğrenme sistemi (kod öğrenmek için)
 
-- Her gün sonu: `docs/OGRENME_NOTLARI.md` dosyasına **kendi kelimelerinle 3 cümle**: bugün ne yaptık, neden öyle, nerede kırılır.
+- Her gün sonu: `docs/Ogrenme_Notlari.md` dosyasına **kendi kelimelerimle 3 cümle**: bugün ne yaptım, neden öyle, nerede kırılır.
 - Bekleyen: `chunklama.py` satır satır anlatımı. Gün 13 içinde 30 dk'lık bir blok.
 - Roadmap'in DONE kriterleri zaten "kendi cümlelerimle açıklayabiliyorum" diyor (Gün 14, 15). Bu sınav değil, mentor sunumunun provası.
-- README'de ve mentorla konuşmada kodu nasıl geliştirdiğini dürüst anlat ("Claude ile eşli çalıştım, şu parçaları kendim yazdım/anladım/değiştirdim"). Her parçayı kendi cümlenle anlatabilmek gerçek güvence.
+- README'de ve mentorla konuşmada kodu nasıl geliştirdiğimi dürüstçe anlatacağım ("Claude ile eşli çalıştım, şu parçaları kendim yazdım/anladım/değiştirdim"). Her parçayı kendi cümlemle anlatabilmek gerçek güvence.
 
 ## Süre
 
-Roadmap: Gün 13–20 toplam ≈ 34–46 saat. EK'ler ≈ +4 saat, hepsi kesilebilir.
+Roadmap: Gün 13–20 toplam ≈ 34–46 saat. EK'ler ≈ +4 saat, hepsi yapılacak (zaman baskısı yok).

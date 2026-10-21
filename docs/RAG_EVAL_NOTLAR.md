@@ -1,7 +1,7 @@
 # RAG Değerlendirme: elle inceleme bulguları (Gün 13)
 
 Kaynak: `data/rag_inceleme.txt` (33 soru, `python tests/rag_degerlendirme.py` ve `python tests/eval_oku.py` çıktısı).
-Cevap ile atıf yapılan chunk cümle cümle karşılaştırıldı. İkinci okuyucu: Claude. Poyraz'ın kendi okumasıyla doğrulanması gerekir.
+Cevapları ve atıf yapılan chunk'ları cümle cümle Claude karşılaştırdı (ikinci okuyucu o). Ben henüz kendi okumamla doğrulamadım, bu aşağıdaki "Sonraki adımlar"da var.
 
 ## Sonuç tablosu (otomatik ölçü)
 
@@ -20,7 +20,7 @@ Sınırlar: taze sette sadece 8 cevaplı soru var, 8/8 ile %90 gerçek başarı 
 ### 1. #17: arama hatası + yanlış "yok" iddiası
 - Soru: "Aynı konuyla ilgili birden çok kişi için kaç şüpheli işlem bildirim formu düzenlenir?"
 - Cevap PDF sayfa **9**, "4.1 Formun Düzenlenmesine Dair Genel Hususlar" (ilk notta yanlışlıkla 8 yazılmıştı; hatalı chunk metadatasından alınmıştı, bkz. bulgu 6): "Aynı konuyla ilgili birden çok gerçek ve/veya tüzel kişi hakkında **tek bir ŞİB Formu** düzenlenir." (33 kelimelik kısa chunk).
-- Soru bu cümleye kelimesi kelimesine benziyor. BM25 chunk'ı **1. sıraya** koyuyor (skor 26.2, ikincisi 10.1). e5 ilk 5'e bile almadı. Sebep tablo gürültüsü değil, kısa chunk'ın e5 vektöründe seyrelmesi (önceki varsayımımız yanlıştı).
+- Soru bu cümleye kelimesi kelimesine benziyor. BM25 chunk'ı **1. sıraya** koyuyor (skor 26.2, ikincisi 10.1). e5 ilk 5'e bile almadı. Sebep tablo gürültüsü değil, kısa chunk'ın e5 vektöründe seyrelmesi (önceki varsayımım yanlıştı).
 - İkinci çalıştırmada model sadece "bulamadım" demedi, **"Rehberde ... bir sayı belirtilmemiştir"** diye yanlış bir yokluk iddiası yazdı. Rehber tek form diyor. Bankacılıkta "yok" demek yanlışsa, "bulamadım" demekten daha zararlı.
 - Ayrıca atıf yaptığı [4] ve [5] kaynakları kaynaklı ama sorunun konusu dışında.
 - Aday çözüm: hibrit arama (BM25 + e5). Kanıt tek soru. Tüm 33 soruyu bozmaması ve #17'yi düzeltmesi **ölçülmeden** karar verilmez.
@@ -34,7 +34,7 @@ Sınırlar: taze sette sadece 8 cevaplı soru var, 8/8 ile %90 gerçek başarı 
 ### 3. Gereksiz ya da tekrar eden "Rehberde bu bilgiyi bulamadım."
 - #1: iki çalıştırmada da "gerekçe yok" cümlesinin ardından aynı anlamda sabit cümle ekleniyor (tekrar).
 - #17: yanlış yokluk iddiasının ardından da ekleniyor.
-- Sebep: `rag_cevap.py` kural 2'yi `BULAMADIM` sabit cümlesine bağladık, cümle hangi ayrıntının eksik olduğunu söylemiyor.
+- Sebep: `rag_cevap.py`'de kural 2'yi `BULAMADIM` sabit cümlesine bağladım, cümle hangi ayrıntının eksik olduğunu söylemiyor.
 - Aday çözüm: "eksik ayrıntıyı adıyla belirt" ve "kaynakta yazmayan bir nedeni yorum olarak ekleme" kuralları. Değişiklik yapılırsa 7/7 + held-out + taze + değerlendirme tablosu birlikte tekrar ölçülür, her biri iki çalıştırma.
 
 ### 4. Küçük gözlemler
@@ -77,7 +77,7 @@ Sınırlar: taze sette sadece 8 cevaplı soru var, 8/8 ile %90 gerçek başarı 
 
 ## Sonraki adımlar (her biri 33 soruyla, iki çalıştırmada ölçülerek)
 
-1. Cevapsız soruları PDF'te Ctrl+F ile doğrula (Poyraz).
+1. Cevapsız soruları PDF'te Ctrl+F ile doğrulamak (ben).
 2. Kural 2 + sadakat kuralı: "eksik ayrıntıyı adıyla belirt, kaynakta olmayanı yorumlama" (bulgu 2, 3).
 3. Hibrit arama deneyi (BM25 + e5), taze sette de karşılaştır (bulgu 1).
 4. ~~Chunk sayfa metadatası düzeltmesi + PDF'ten sayfa doğrulama testi (bulgu 6).~~ **Yapıldı.**

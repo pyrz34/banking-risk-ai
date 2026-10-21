@@ -1,8 +1,9 @@
 # banking-risk-ai: çalışma rehberi (Gün 1–15)
 
-Bu rehber koddan okunarak yazıldı, anlatılan her sayı ve davranış dosyalarda var. Her bölümde üç soru var: **Ne yapıyor? Neden böyle? Nerede kırılır?** Sonra seni test edeceğim, o yüzden "nerede kırılır" kısımlarını atlama.
+Bu rehber koddan okunarak hazırlandı, anlatılan her sayı ve davranış dosyalarda var. Her bölümde üç soru var: **Ne yapıyor? Neden böyle? Nerede kırılır?** Sonunda kendimi test edeceğim, o yüzden "nerede kırılır" kısımlarını atlamayacağım.
 
 Durum: Gün 1–14 commit'li ve çalışıyor. Gün 15 (agent) kodu yazıldı, gerçek Claude denemesi bekliyor.
+Not: Bu rehber Gün 15 itibarıyla yazıldı. Sonraki günler için README ve `docs/ARCHITECTURE.md`'ye bakıyorum.
 
 ---
 
@@ -18,7 +19,7 @@ SORGU ZAMANI:
                                                                        → Claude → atıflı açıklama ──► /explain-risk
   soru  ──► rag_cevap: ara() → top-5 chunk → Claude → [n] atıflı cevap ya da "bulamadım"
 
-AGENT (Gün 14–15):        soru ──► Claude ──► "şu aracı çağır" ──► tools/banking_tools.py (bizim kod) ──► sonuç ──► Claude ──► ... ──► cevap
+AGENT (Gün 14–15):        soru ──► Claude ──► "şu aracı çağır" ──► tools/banking_tools.py (benim kodum) ──► sonuç ──► Claude ──► ... ──► cevap
 ```
 
 | Dosya | Görevi |
@@ -61,7 +62,7 @@ Skor ≥ 50 ise etiket `suspicious`, değilse `normal`.
 
 **Nerede kırılır:**
 - Kurallar basit bir demo. Gerçek bankada yüzlerce kural ve model olur.
-- `INTERNATIONAL` ülkeye bakmıyor, her yurtdışı işlem aynı puanı alıyor. Rehber "riskli ülke" diyor, biz "yurtdışı" diyoruz: kural–politika arasında ayrıntı farkı.
+- `INTERNATIONAL` ülkeye bakmıyor, her yurtdışı işlem aynı puanı alıyor. Rehber "riskli ülke" diyor, ben "yurtdışı" diyorum: kural–politika arasında ayrıntı farkı.
 - z-skoru ortalama ve standart sapmaya dayanır, ikisi de aşırı uçlardan etkilenir.
 
 ---
@@ -99,13 +100,13 @@ Kurallar (rehberin yapısına göre):
 
 Akış: `satirlari_cikar` (sayfa, satır çiftleri) → `birimlere_ayir` (kayıt/başlık sınırlarına göre "birim") → `uzun_birimi_bol` → `chunkla` (birimleri paketler). Sonuç: **257 chunk**.
 
-**Gün 13'te bulduğumuz hata (örnek ders):** Birim sayfa sınırını aşan uzun bir paragrafsa, eskiden birimin sadece **ilk satırının** sayfası saklanıyordu. Bölünen alt parçalar yanlış sayfayı alıyordu (81 chunk). Çözüm: **her satırın kendi sayfasını** birimle birlikte taşımak. Test (`chunk_kontrol.py`) artık her chunk'ın sayfasını PDF'in gerçek sayfalarıyla karşılaştırıyor. Chunk **metinleri değişmediği** için indeks yeniden hesaplanmadı.
+**Gün 13'te bulduğum hata (örnek ders):** Birim sayfa sınırını aşan uzun bir paragrafsa, eskiden birimin sadece **ilk satırının** sayfası saklanıyordu. Bölünen alt parçalar yanlış sayfayı alıyordu (81 chunk). Çözüm: **her satırın kendi sayfasını** birimle birlikte taşımak. Test (`chunk_kontrol.py`) artık her chunk'ın sayfasını PDF'in gerçek sayfalarıyla karşılaştırıyor. Chunk **metinleri değişmediği** için indeks yeniden hesaplanmadı.
 
 ### 4.3 `rag_index.py`: embedding ve indeks 🔥
-**Embedding:** Metni, anlamını sayılarla temsil eden bir vektöre (burada 1024 sayı) çeviren model. Anlamca yakın metinlerin vektörleri birbirine yakındır. Modelimiz `multilingual-e5-large` (Türkçe dahil çok dilli, ~2.2 GB, yerelde çalışıyor).
+**Embedding:** Metni, anlamını sayılarla temsil eden bir vektöre (burada 1024 sayı) çeviren model. Anlamca yakın metinlerin vektörleri birbirine yakındır. Kullandığım model `multilingual-e5-large` (Türkçe dahil çok dilli, ~2.2 GB, yerelde çalışıyor).
 
 Önemli ayrıntılar:
-- **`query: ` / `passage: ` önekleri:** e5 modeli soruyu `query: ` ile, metni `passage: ` ile bekler. `fastembed` bunu kendiliğinden eklemez, biz ekliyoruz (`EmbeddingModeli`). Unutulursa kalite sessizce düşer.
+- **`query: ` / `passage: ` önekleri:** e5 modeli soruyu `query: ` ile, metni `passage: ` ile bekler. `fastembed` bunu kendiliğinden eklemez, ben ekliyorum (`EmbeddingModeli`). Unutulursa kalite sessizce düşer.
 - **Normalleştirme:** her vektör uzunluk 1'e ölçeklenir. Böylece **cosine benzerliği = sade nokta çarpımı (dot)**: `vektorler @ soru_vektoru`.
 - **`ara()`:** soru vektörü ile bütün chunk vektörlerinin çarpımı → skorlar → `argsort` ile en yüksek k tanesi. Vektör veritabanı yok: 257 chunk için bu yeter. `ara()` tek değişim noktası: Chroma/FAISS ileride sadece onun arkasına konur.
 - **İndeks dosyası ve hash:** vektörler `data/chunk_indeksi_e5.npz`'e kaydedilir, yanına chunk **metinlerinden** hesaplanmış bir hash yazılır. Sonraki açılışta metinler aynıysa dosyadan okunur (yeniden 2 GB'lık model hesabı yok). Metin ya da model değişirse hash tutmaz, otomatik yeniden hesaplanır. Hash sadece metinden hesaplandığı için sayfa gibi metadata değişince yeniden hesaplanmaz.
@@ -149,7 +150,7 @@ Akış: `satirlari_cikar` (sayfa, satır çiftleri) → `birimlere_ayir` (kayıt
 - Sistem mesajı: skorun dışında yeni neden uydurma; rehberde **doğrudan** karşılığı olmayan kural için "doğrudan bir karşılık yok" de; **hukuki hüküm verme** ("suçtur" deme, "incelenmesi önerilir" de).
 - Atıf bayrağı: yanıttaki `policy_sources[].atif_edildi`, Claude cevapta hangi kaynağa `[n]` verdiğini gösterir.
 
-**Nerede kırılır:** Rehber bildirim **usulünü** anlatır, bizim kurallar basit bir demo. Çoğu kuralın rehberde birebir karşılığı yok. Sistem bunu saklamıyor, açıkça "karşılık yok" diyor. Bu bir hata değil, dürüstlük.
+**Nerede kırılır:** Rehber bildirim **usulünü** anlatır, benim kurallarım basit bir demo. Çoğu kuralın rehberde birebir karşılığı yok. Sistem bunu saklamıyor, açıkça "karşılık yok" diyor. Bu bir hata değil, dürüstlük.
 
 ---
 
@@ -161,8 +162,8 @@ Akış: `satirlari_cikar` (sayfa, satır çiftleri) → `birimlere_ayir` (kayıt
 
 | Küme | Ne | Neden ayrı |
 |---|---|---|
-| AYAR (4+3) | Üzerinde ayar yaptığımız | Skoru şişik, genellemeyi göstermez |
-| HELD-OUT (12+3) | Ayar yapmadan ayırdığımız | Dürüst ölçü, ama bir kez hata ayıklamada görüldü |
+| AYAR (4+3) | Üzerinde ayar yaptığım | Skoru şişik, genellemeyi göstermez |
+| HELD-OUT (12+3) | Ayar yapmadan ayırdığım | Dürüst ölçü, ama bir kez hata ayıklamada görüldü |
 | TAZE (8+3) | Gün 13'te yazılan, hiç görülmemiş | En dürüst ölçü, ama küçük ve Claude yazdı |
 
 Her kümede hem **cevaplı** (rehberde var) hem **cevapsız** (rehberde yok, doğru cevap sadece "bulamadım") sorular var.
@@ -181,7 +182,7 @@ Her kümede hem **cevaplı** (rehberde var) hem **cevapsız** (rehberde yok, do�
 
 ## 8. Tool calling (Gün 14) 🔥
 
-**Temel fikir:** Claude bir fonksiyonu **çalıştırmaz.** Ona araçların bir listesini (şema) veririz, o "şu aracı şu argümanlarla çağır" der, **biz** çalıştırırız, sonucu geri veririz.
+**Temel fikir:** Claude bir fonksiyonu **çalıştırmaz.** Ona araçların bir listesini (şema) veriyorum, o "şu aracı şu argümanlarla çağır" diyor, **benim kodum** çalıştırıyor, sonucu geri veriyorum.
 
 **Protokol (`tool_calling.py`):**
 1. İstek: soru + `tools=TOOL_SCHEMAS`.
@@ -223,7 +224,7 @@ Her kümede hem **cevaplı** (rehberde var) hem **cevapsız** (rehberde yok, do�
 
 **Maliyet gerçeği:** Her adımda **bütün geçmiş** yeniden gönderilir (mesajlar, araç sonuçları). Adım sayısı arttıkça her çağrının girdisi büyür, toplam maliyet hızlı artar. Bu yüzden adım freni ve izleme (adım başına token) şart.
 
-**Nerede kırılır:** Claude aynı aracı tekrar tekrar çağırabilir (fren onu keser ama tur boşa gider), araç hatasını yanlış yorumlayabilir, uydurma argümanla devam edebilir. Gün 18'de bunu senaryolarla ölçeceğiz.
+**Nerede kırılır:** Claude aynı aracı tekrar tekrar çağırabilir (fren onu keser ama tur boşa gider), araç hatasını yanlış yorumlayabilir, uydurma argümanla devam edebilir. Gün 18'de bunu senaryolarla ölçtüm (`tests/inceleme_degerlendirme.py`).
 
 **Agent ≠ sihir:** Agent "her şeyi yapan zeka" değil. Deterministik iş (skor, veri sorgusu) araçta kalır. Agent sadece **hangi aracı, hangi sırayla** kullanacağına karar verir.
 
@@ -231,7 +232,7 @@ Her kümede hem **cevaplı** (rehberde var) hem **cevapsız** (rehberde yok, do�
 
 ## 10. PoC'den production'a: fark ne? 🔥
 
-Bu proje bir **proof-of-concept**. Production'a almak için neyin eksik olduğunu bilmek senin gücün. Dürüst durum:
+Bu proje bir **proof-of-concept**. Production'a almak için neyin eksik olduğunu bilmek benim için önemli. Dürüst durum:
 
 | Alan | Şu an | Production için |
 |---|---|---|
@@ -265,7 +266,7 @@ Roadmap'in cümlesi hâlâ doğru: "Agentic AI proof-of-concept". "Production-re
 | **Hallucination** | Modelin kaynakta olmayanı uydurması |
 | **Atıf** | Cevapta `[n]` ile kaynak göstermek |
 | **Held-out** | Ayar yaparken kenara ayrılan, dürüst ölçü seti |
-| **tool_use / tool_result** | Claude'un araç isteği / bizim verdiğimiz sonuç |
+| **tool_use / tool_result** | Claude'un araç isteği / benim verdiğim sonuç |
 | **stop_reason** | Claude'un neden durduğu (`end_turn`, `tool_use`, `max_tokens`) |
 | **Thinking token** | Claude'un iç düşünmesi, `max_tokens` bütçesinden harcanır |
 | **Prompt injection** | Dış metnin içine gizlenmiş talimatla modeli yönlendirme |

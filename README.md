@@ -21,7 +21,7 @@ Rehber PDF'i de repoda yok. MASAK'ın şüpheli işlem bildirim rehberini kendin
 
 ## Kurulum
 
-Gereksinim: Python 3.14 ile geliştirildi ve denendi (başka sürümleri denemedim). Komutlar Windows PowerShell için.
+Gereksinim: Python 3.14 ile geliştirildi ve denendi (başka sürümleri denemedim). Komutlar Windows PowerShell için. `requirements.txt` sürümleri geliştirme ortamından alındı. Kurulum adımlarını sıfırdan temiz bir ortamda baştan sona henüz denemedim (aşağıdaki "Sınırlılıklar" bölümüne bak).
 
 ```powershell
 python -m venv .venv
@@ -147,7 +147,7 @@ Küme boyutları küçük, güven aralığı geniş. "Dayanaklı" otomatik bir v
 
 ### Maliyet ve önbellek
 
-Model: `claude-haiku-5-5`. Fiyat olarak 100K tokene kadar olan promptlarda 1M girdi tokeni başına 0,10 USD, 1M çıktı tokeni başına 0,50 USD kullandım. Bu rakamı iki üçüncü taraf kaynakta gördüm, resmi fiyat sayfasını doğrudan açamadım: kullanmadan önce [resmi sayfadan](https://platform.claude.com/docs/en/about-claude/pricing) teyit et.
+Model: `claude-haiku-5-5`. Fiyat olarak 100K tokene kadar olan promptlarda 1M girdi tokeni başına 0,10 USD, 1M çıktı tokeni başına 0,50 USD kullandım. Bu rakamı iki üçüncü taraf kaynakta gördüm, resmi fiyat sayfasıyla henüz karşılaştırmadım: dolar rakamları tahmindir, token sayıları ise ölçümdür. Güncel fiyat için [resmi sayfaya](https://platform.claude.com/docs/en/about-claude/pricing) bak.
 
 Aynı işlemin (skor 70, 3 kural) farklı yollarla açıklatılması, `python tests\maliyet_olcum.py --tekrar 3 --ajan` ile ölçüldü (tam çıktı: [`docs/MALIYET_OLCUM.md`](docs/MALIYET_OLCUM.md)):
 
@@ -204,6 +204,7 @@ documents/      rehber PDF'i (git'te yok)
 - **Süre garantisi sınırlı.** Her Claude isteği 60 sn ile sınırlı (2 yeniden deneme) ve ajanın toplam süresi 120 sn ile sınırlı. Ajan başarısız olduktan sonra çalışan açıklama basamağının ayrı bir toplam süre sınırı yok, yani Claude yavaşladığında (bağlantı açık ama cevap gelmiyor) en kötü durum gecikmesi belirsiz. Claude'a hiç ulaşılamayan senaryoda ölçtüğüm toplam süre 15,8 sn.
 - **Açıklama metni z sayısını yazmaz.** Maliyet için önbellek anahtarından ve Claude'a giden nedenlerden tutar sapması (z) çıkarıldı (bkz. `docs/ARCHITECTURE.md`). `reasons` alanı z'yi taşımaya devam eder. İsabet oranı yalnız simülasyonla (üst sınır) hesaplandı, gerçek trafikte ölçülmedi.
 - **Önbellek** bellekte tutulur: sunucu yeniden başlayınca silinir, birden çok süreçte paylaşılmaz, aynı anda gelen iki aynı istek ikisi de Claude'a gider.
+- **Kurulum ve fiyat doğrulanmadı.** `requirements.txt` ile temiz ortamda kurulum baştan sona denenmedi. Dolar cinsinden maliyetler resmi fiyat sayfasıyla karşılaştırılmadı. Token sayıları ve testler ölçülüp çalıştırıldı, bu iki madde değil.
 - **Model davranışı değişebilir.** Aynı girdiye her seferinde aynı cevap garanti değil (kullanılan modelde `temperature` desteklenmiyor).
 
 ## Gelecek çalışma
@@ -216,4 +217,4 @@ documents/      rehber PDF'i (git'te yok)
 
 ## Nasıl geliştirildi
 
-Bu proje Claude ile eşli çalışılarak geliştirildi: kodun büyük kısmı birlikte yazıldı ve test edildi; her adımı çalıştırıp çıktısını inceledim. Hangi parçaları kendim yazdığımı/değiştirdiğimi ve anladığımı `docs/Ogrenme_Notlari.md` dosyasında kendi cümlelerimle anlatıyorum.
+Bu projeyi Claude ile eşli çalışarak geliştirdim: kodun büyük kısmını birlikte yazıp test ettik, ben her adımı çalıştırıp çıktısını inceledim. Hangi parçaları kendim yazdığımı, değiştirdiğimi ve anladığımı `docs/Ogrenme_Notlari.md` dosyasında kendi cümlelerimle anlatıyorum.
