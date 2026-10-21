@@ -1,13 +1,21 @@
-pandas
-numpy
-openpyxl
-xlsxwriter
-fastapi
-uvicorn
-requests
-anthropic
-python-dotenv
-brotli>=1.2.0
-fastembed
-pypdf
-
+# Python 3.14 ile geliştirildi ve denendi. Sürümler, çalışan ortamdan (pip freeze) alındı.
+# Veri ve risk motoru
+pandas==3.0.6
+numpy==2.5.4
+openpyxl==3.1.5
+xlsxwriter==3.2.9
+# API
+fastapi==0.143.0
+pydantic==2.14.0
+starlette==1.7.0
+uvicorn==0.54.0
+brotli==1.2.0
+# Claude ve ortam değişkenleri
+anthropic==1.13.0
+python-dotenv==1.2.4
+# RAG: embedding ve PDF
+fastembed==0.9.0
+pypdf==6.20.0
+# Testler: FastAPI TestClient (httpx) ve çalışan sunucuya istek atan tests/api_istek.py (requests)
+httpx==0.28.1
+requests==2.34.2

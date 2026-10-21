@@ -1,157 +1,145 @@
-# Mimari (Gün 1)
+# Mimari
 
-Bu dosya, risk engine projemin şu an nasıl çalıştığını anlatıyor. Planda olup henüz yapmadığım şeyleri de açıkça yazdım.
+Bu belge sistemin **şu an nasıl çalıştığını**, hangi dosyanın hangi katmanda durduğunu ve neden öyle yaptığımı anlatır. Kurulum ve kullanım için [`README.md`](../README.md). Yapılmayanlar ve sınırlılıklar README'nin "Sınırlılıklar" bölümünde.
 
-## Şu anki akış
+## Genel akış
 
-```text
-veri_uret.py
-   ↓  sentetik veri üretir
-bank_ops_risk_dataset.xlsx   [customers, accounts, transactions]
-   ↓
-risk_engine.py
-   ↓  pandas ile transactions sheet'ini okur
-risk_skoru_hesaplama(row)    → her işlem için 0-100 skor
-   ↓
-skor >= 50 olanlar şüpheli
-   ↓
-supheli_islemler.xlsx
+```mermaid
+flowchart TD
+    subgraph Veri
+        U[veri_uret.py] --> X[(bank_ops_risk_dataset.xlsx)]
+        X --> V[tools/veri.py<br/>tablolar + imza]
+    end
+    subgraph Risk
+        R[risk_engine.py<br/>kurallar, skor, rule_ids]
+    end
+    subgraph RAG
+        P[pdf_yukle.py] --> C[chunklama.py<br/>257 parça]
+        C --> I[rag_index.py<br/>e5 embedding, ara]
+        I --> RR[risk_rag.py<br/>kural -> rehber -> açıklama]
+    end
+    subgraph Ajan
+        T[tools/banking_tools.py<br/>4 araç]
+        A[agent.py<br/>döngü + frenler]
+        TR[agent_trace.py<br/>iz, süre, token]
+        IN[investigation.py<br/>inceleme istemi]
+        CH[investigation_checks.py<br/>rapor kontrolleri]
+        S[investigation_service.py<br/>basamaklar + önbellek]
+        O[onbellek.py<br/>LRU]
+    end
+    API[api.py<br/>FastAPI]
+
+    X --> R
+    V --> T
+    R --> T
+    I --> T
+    I --> RR
+    R --> RR
+    T --> A
+    A --> TR
+    A --> IN
+    IN --> CH
+    IN --> S
+    S --> O
+    S --> RR
+    API --> S
+    API --> RR
+    API --> R
 ```
 
-## Hangi dosya ne yapıyor
+`/predict-risk` yalnızca risk motoruna dokunur, Claude ya da rehber yüklenmeden çalışır.
 
-- **veri_uret.py**: 600 müşteri, hesapları ve 120.000 işlem üretiyor (seed=42), hepsini `bank_ops_risk_dataset.xlsx`'e yazıyor.
-- **risk_engine.py**: `transactions` sheet'ini okuyor, her işleme puan veriyor, skoru 50 ve üstü olanları `supheli_islemler.xlsx`'e kaydediyor.
-- **agent_audit.py**: şu an boş.
+## Modül haritası
 
-## Sorulara kendi cevaplarım
+| Katman | Dosya | Görevi |
+|---|---|---|
+| Veri | `veri_uret.py` | Sentetik veri üretir (600 müşteri, hesaplar, 120.000 işlem, `seed=42`). |
+| Veri | `tools/veri.py` | Excel tablolarını bir kez yükler, veri imzası (içerik parmak izi) üretir. |
+| Risk | `risk_engine.py` | Dört kural, skor (en çok 100), etiket (eşik 50), `reasons` ve sabit `rule_ids`. |
+| RAG | `pdf_yukle.py` | Rehber PDF'ini sayfa sayfa okur ve temizler. |
+| RAG | `chunklama.py` | Metni 20-50 kelimelik (en çok 75) parçalara böler, kayıt kodlarını (`SK-..`, `T-001-..`) ve başlıkları yakalar. İçindekiler sayfaları atlanır. |
+| RAG | `rag_index.py` | `intfloat/multilingual-e5-large` ile embedding, `.npz` indeks, `ara()` (kosinüs benzerliği). Vektör deposunu değiştirmek için tek nokta. |
+| RAG | `rag_cevap.py` | Soru → arama → atıflı cevap; rehberde yoksa "bulamadım". |
+| RAG | `risk_rag.py` | Tetiklenen kural kimlikleri → ilgili rehber parçaları → Claude açıklaması. Kural tetiklenmediyse Claude çağrılmaz. |
+| Araç | `tools/banking_tools.py` | Ajanın dört aracı: `get_customer_info`, `get_transaction_history`, `get_risk_score`, `search_risk_policy`. Şemalar ve çalıştırıcı. Hata cevabı `{"error": ...}` biçimindedir. |
+| Ajan | `tool_calling.py` | Tek turlu araç çağırma, ortak sabitler (model, token sınırı). |
+| Ajan | `agent.py` | Döngü: Claude karar verir → Python aracı çalıştırır → sonuç Claude'a döner. Dört fren (aşağıda). |
+| Ajan | `agent_trace.py` | Her adımın aracı, argümanı, token ve süresi; JSON iz dosyaları. |
+| Ajan | `investigation.py` | İnceleme sistem istemi (5 başlık, hüküm yasağı) ve `incele()`. |
+| Ajan | `investigation_checks.py` | Rapor için kaba otomatik kontroller (uydurma işlem, geçersiz atıf, hüküm dili, eksik başlık). |
+| Ajan | `investigation_service.py` | `/investigate` iş mantığı: basamak merdiveni, önbellek, uyarılar. |
+| Ajan | `onbellek.py` | Eşzamanlı kullanıma uygun LRU önbellek. |
+| API | `api.py` | FastAPI uç noktaları, doğrulama modelleri, açılışta ısıtma. |
+| Demo | `embedding_demo.py` | Embedding benzerliği öğrenme demosu, sistemin parçası değil. |
 
-**Risk engine nereden veri alıyor?**
-`bank_ops_risk_dataset.xlsx` dosyasındaki `transactions` sheet'ini pandas ile okuyor. Veriyi `veri_uret.py` üretmişti.
+## Tasarım kararları ve nedenleri
 
-**Hangi feature'ları kullanıyor?**
-Transactions tablosunda `txn_id, account_id, txn_time, channel, txn_type, amount, merchant_category, is_international, counterparty_country, status` kolonları var. Ama risk engine bunların sadece 4 tanesini kullanıyor: `status`, `channel`, `is_international`, `amount`. Geri kalanı (txn_time, merchant_category vb.) şu an skora girmiyor.
-(Not: Her satır bir işlem (transaction), kolonlar ise feature. Feature, skoru hesaplarken kullandığımız bilgi. Yeni feature türetmeye (ör. "gece işlemi mi?") feature engineering deniyor, şu an yapmıyorum.)
+**Deterministik iş araçta kalır.** Skor hesabı, müşteri verisi ve işlem sıralaması Python'da. Claude hesaplama yapmaz, sadece hangi aracı hangi argümanla çağıracağını söyler ve sonuçları yazıya döker. Bu yüzden `/investigate` cevabındaki "en riskli 3 işlem" Claude'dan değil doğrudan veri katmanından gelir: Claude çökse de doğru.
 
-**Score nasıl oluşuyor?**
-Belirlediğim kurallara göre. Her kural sağlanırsa puan ekleniyor, toplam en fazla 100:
+**Risk motoru kural tabanlı ve açıklanabilir.** Her kural sabit bir kimlik taşır (`FAILED_TX`, `RISKY_CHANNEL`, `INTERNATIONAL`, `AMOUNT_ANOMALY`). Kimlik neden metninden ayrıdır çünkü metin `z=3.5` gibi sayılar içerir ve önbellek/politika eşleştirmesi için kararlı bir anahtar gerekir. Tek bir kural eşiği (50) geçirmez, en az iki sinyal birleşmeli. Eşik ve puanlar benim varsayımım, veriden öğrenilmedi.
 
-| Koşul | Puan |
+**Vektör deposu: numpy + `.npz`.** Chroma/FAISS planda vardı ama atlandı. Rehber 257 parça, tam tarama anlık. `ara()` tek değişim noktası, yani sonra eklenebilir. Chroma/FAISS ile karşılaştırma yapılmadığı için "daha iyi/aynı/daha kötü" iddiası yok. Embedding için üç model tanımlı (MiniLM, mpnet, e5), varsayılan e5. `tests/arama_testi.py` aramayı 13 soruda ölçer; e5 ile doğru parça çoğunlukla ilk sırada çıkıyor (medyan sıra 1, en kötü 4).
+
+**Chunklama rehberin yapısına göre.** Rehber, kayıt kodlu satırlardan (`SK-..`, `T-001-..`) ve numaralı başlıklardan oluşuyor. Parça sınırları buna göre belirlenir, cümle ortasında kesilmez (50 kelime hedef, 75'e kadar esner). İçindekiler/sürüm tablosu sayfaları (1-4) arama gürültüsü yaptığı için atlanır. Form tabloları hâlâ gürültülü parçalar üretebiliyor, bilinen bir zayıflık.
+
+**Kural–politika eşleşmesi kaba.** Rehber `RISKY_CHANNEL` gibi kuralların tanımını içermiyor. `risk_rag.KURAL_SORGULARI` her kural için rehberdeki yakın bir ifadeyi arar (ör. "İnternet ve mobil kanaldan yapılan işlemler"). Bu bir yaklaşıklık. Ajan ise kendi arama sorgusunu yazar, bu yüzden bulduğu kanıt çalıştırmadan çalıştırmaya değişir. Deterministik sorgulara geçmek denenmedi (README, Gelecek çalışma).
+
+**"Bulamadım" koruması.** RAG sistem istemi sadece verilen kaynaklara dayanmayı, atıf yapmayı ve rehberde yoksa `Rehberde bu bilgiyi bulamadım.` demeyi ister. Cevapsız 9 soruda (3+3+3) doğru reddetme 9/9, ama bu küçük bir küme.
+
+**Düşünme (thinking) tokenları.** Kullanılan modelde düşünme tokenleri `max_tokens` bütçesinden harcanıyor. İlk denemede 1000 token yetmeyip cevap boş çıktı. Bu yüzden `MAKS_TOKEN = 4000`. Maliyet tarafında çıktı tokenlerine düşünme dahil.
+
+**Ajan döngüsü ve frenler.** Dört bağımsız fren, hangisi önce dolarsa döngü durur ve nedeni `bitis` alanına yazılır:
+
+| Fren | Varsayılan | `bitis` |
+|---|---|---|
+| Adım sayısı (`max_steps`) | 5 (inceleme: 6) | `adim_siniri` |
+| Toplam süre (`sure_siniri_sn`) | yalnız `/investigate`: 120 sn | `sure_siniri` |
+| Token bütçesi | 30.000 | `token_siniri` |
+| Model kendi durdu | - | `tamamlandi`, aksi halde `durdu:<neden>` |
+
+Sınırda gelen araç istekleri **çalıştırılmaz**, yalnızca kaydedilir. Kontrol sırası: adım, süre, token. Sınırda kesilen bir inceleme "tamamlandı" sayılmaz ve rapor olarak kullanılmaz.
+
+**Ajan bir PoC.** Rapor başlıkları sabit, "karar analistindir" kuralı sistem istemine yazıldı, ajan hüküm cümlesi kurmamalı (`hukum_yok` kontrolü bunu kaba şekilde izler). Otomatik kontroller yalnızca ipucu: uydurma işlem numarası ve geçersiz sayfa atfı yakalanır, ama örneğin ülke kodu ya da tutar gibi sayısal iddialar denetlenmez.
+
+**Zarif bozulma (`/investigate`).** Basamaklar, yukarıdan aşağıya:
+
+0. Veri katmanı (Claude yok). Müşteri yoksa 404. Veri katmanı bozuksa 500: çekirdek bozukken sessizce "boş" cevap dönmek istemedim.
+1. Ajan raporu (`rapor_kaynagi: ajan`), sadece `bitis=tamamlandi` ise.
+2. En riskli işlemin kural tabanlı Claude açıklaması (`aciklama`).
+3. Yalnız veri (`yok`).
+
+Müşteri varsa yanıt her zaman 200. Otomatik kontrolleri geçmeyen bir ajan raporu yine döner ama `uyarilar` içinde hangi kontrolün kaldığı yazar (rapor gizlenmez).
+
+**Önbellek.** İki bellek içi LRU:
+
+| Önbellek | Anahtar | Ne saklanır |
+|---|---|---|
+| Rapor (128) | (müşteri, **veri imzası**, istem kimliği) | Tamamlanan ajan raporu, kontroller, iz özeti |
+| Açıklama (256) | (etiket, skor, `rule_ids`, **neden metinleri**) | Claude'un ürettiği açıklama |
+
+Anahtarda veri imzası var: Excel değişirse eski rapor kullanılmaz. Açıklama anahtarına `reasons` metinleri de girer, çünkü kural kimlikleri aynı olsa da `z` değeri farklı olabilir ve yanlış sayıyı başka işlemin açıklamasında göstermek istemedim. Hatalı/yarım sonuçlar ve Claude'un üretmediği sabit metinler saklanmaz. Değerler kopyalanarak verilir/alınır. Aynı anda gelen iki aynı istek ikisi de hesaplanır (tek-uçuş yok), süreç yeniden başlayınca önbellek boşalır. Önceki plan sadece `etiket + sıralı rule_ids` anahtarı öneriyordu, bunu bilerek genişlettim.
+
+**Isıtma.** Açılışta Excel ve e5 yüklenir (birkaç sn). Aksi halde ilk rehber aramasında 6,5-10 sn bekleniyor. Isıtma başarısız olsa sunucu açılır, model ilk gerçek istekte yüklenir. `RAG_ISITMA=0` ile kapatılır.
+
+**Girdi doğrulama.** `customer_id` yalnızca ≥1 tam sayı kabul eder: `"1"`, `1.5`, `true`, `0`, negatifler 422 döner (Pydantic `StrictInt`). Böylece `true` sessizce 1 olarak yorumlanmaz.
+
+**Import yapısı.** Modüller düz adlarla import eder (`from risk_engine import ...`), bu yüzden sunucu `--app-dir src` ile başlar. `tools` ile `api` birbirini yalnızca fonksiyon içinde (tembel) import eder, böylece `/predict-risk` Claude kütüphanesi yüklenmeden çalışır ve döngüsel import oluşmaz. Alt paketlere (`src/rag/`, `src/agent/` gibi) bölmeyi **bilerek yapmadım**: çalışan ve test edilmiş yapıyı kırma riski, kazandığı görünümden büyüktü. Bu belgedeki modül haritası aynı işi görüyor.
+
+## Değerlendirme dürüstlüğü
+
+| Küme | Durum |
 |---|---|
-| status FAILED veya ERROR | +30 |
-| channel `mobile_unverified` veya `web` | +15 |
-| is_international == 1 | +25 |
-| amount > 5000 | +30 |
+| Ayar seti (7 soru) | Ayar sırasında defalarca görüldü, skor şişik |
+| Held-out (15 soru) | Ayar yapılmadan yazıldı; sonuç görüldükten sonra değiştirilmedi |
+| Taze (11 soru) | Gün 13'te yazıldı, hiç ayar görmedi, en dürüst ölçü |
 
-**Label nasıl oluşuyor?**
-Şu an ayrı bir label kolonu yok. Sadece eşik var: skor 50 veya üstüyse işlem "şüpheli" listesine alınıyor. İleride buna `normal / suspicious` gibi gerçek bir label kolonu ekleyeceğim.
+Sayılar README'de. Üçü de küçük. Held-out'taki tek hata (#17, "birden çok kişi için kaç form") arama hatası: beklenen bilgi çekilen parçalarda yoktu (`ARAMA_KACTI`), yani sorun arama/chunklamadaydı, cevap üretiminde değil.
 
-**Reasons nasıl oluşuyor?**
-Şu an oluşmuyor, kod sadece puanları topluyor, hangi kuralın tetiklendiğini kaydetmiyor. Reasons, "bu işlem neden bu skoru aldı" demek, ör. "başarısız işlem (+30), yurtdışı (+25)". Hangi kural tetiklenince listeye bir açıklama ekleyerek üreteceğim (Gün 2c). İleride LLM bu reasons'ı doğal dile çevirecek.
+## Test stratejisi
 
-## Eşik mantığı
+Üç katman:
+1. **Birim ve entegrasyon, çevrimdışı:** sahte Claude + sahte rehber vektörü + **gerçek** araçlar ve gerçek veri. Hızlı, ücretsiz, her değişiklikten sonra çalıştırılır. Test edilen davranışın bozulabildiği, zayıf testleri ise kasıtlı bozulan kod (mutasyon) denemeleriyle ayıkladım.
+2. **Gerçek Claude testleri:** küçük maliyetli (`held_out_testi`, `rag_cevap_testi`, `inceleme_degerlendirme`).
+3. **Canlı deneme:** sunucu + `Invoke-WebRequest` ile elle (README, Demolar).
 
-Eşik 50. Tek başına hiçbir kural şüpheli yapmıyor, en az iki sinyal birleşmeli (başarısız + yurtdışı = 55, yurtdışı + yüksek tutar = 55, başarısız + yüksek tutar = 60). Kanal zayıf bir sinyal, tek başına bir şey ifade etmediği için puanı düşük.
-
-## Baseline v1
-
-- 120.000 işlem, **2893 şüpheli** (eşik 50)
-- Referans dosya: `baseline.xlsx`
-- Gün 2'de class'a çevirince sayı aynı çıkmalı.
-- `veri_uret.py`'yi tekrar çalıştırmıyorum (veri değişirse karşılaştırma bozulur).
-
-## Kodda olmayanlar
-
-- Feature engineering (gece işlemi, işlem sıklığı vb.)
-- Label kolonu
-- Reasons
-- `customers` ve `accounts` sheet'leri kullanılmıyor (müşteri segmenti skora girmiyor)
-
-## Bilinen sorunlar
-
-1. **Kanal kuralı**: Kod `mobile_unverified` arıyor ama veride yok (veride `Mobile` var). Pratikte sadece `web` puan alıyor.
-2. **Z-score yorumu yanıltıcı**: Yorumda Z-Score yazıyor ama kod sabit `amount > 5000` kullanıyor. Corporate müşterilerde tipik işlem zaten bu değerin üstünde. Z-score segmente göre hesaplanmalı, sadece yüksek taraf (z > eşik) risk sayılmalı.
-3. **Kod import edilince direkt çalışıyor**: Fonksiyon/class yapısı yok.
-4. **Veri sentetik ve rastgele**: Gerçek fraud etiketi yok, kurallar benim varsayımım.
-
-## Açık işler
-
-- [ ] Gün 2a: class'a çevir, baseline v1 ile aynı sonucu (2893) doğrula, commit
-- [ ] Gün 2b: segmenti join ile ekle, sabit 5000 yerine z-score koy, baseline v2, ayrı commit
-- [ ] Gün 2c: kanal listesini veriye göre düzelt, label + reasons ekle
-- [ ] Gün 3: `.env`, `.gitignore`, `requirements.txt`
-- [ ] Gün 5: LLM seçimi ve stajda veri paylaşımı konusunu mentora sor
-## Gün 4: API kavramları
-
-- **Request:** İstemcinin sunucuya gönderdiği istek. Adres ve paketten oluşur.
-- **Response:** Sunucunun istemciye döndüğü cevap.
-- **Neden POST:** Risk tahmini için işlem bilgilerini paket olarak göndermem gerekiyor. GET'te bilgi sadece adreste olur.
-- **Neden JSON:** Python sözlüğüne benziyor, her dil ve sistem aynı biçimi anlıyor, ortak dil gibi.
-- **Neden sözleşme:** İstek ve cevabın biçimini, hata kodlarını kod yazmadan önce sabitledim. Birden fazla ekip aynı API'ye bağlanınca standart bir pratik. Benim işime yaradığı yer `amount_z` sorununu koddan önce fark etmem oldu (`docs/API_CONTRACT.md`).
-
-## Gün 5: API (FastAPI)
-
-```text
-istemci --POST /predict-risk (JSON)--> api.py
-   ↓ TransactionRequest ile doğrula (hatalıysa 422)
-   ↓ account_id -> segment bul (yoksa 404)
-   ↓ segment ortalama/std ile amount_z hesapla
-   ↓ RiskEngine.calculate() -> risk_score, risk_label, reasons
-istemci <--200 + JSON-- RiskResponse
-```
-
-- Segment tablosu `data/api_onbellek.pkl` dosyasında saklanıyor (ilk açılışta Excel'den üretilir, sonra hızlı). Veri yeniden üretilirse bu dosyayı sil.
-- `tests/api_istek.py`: sunucuya 7 istek atıp 200/404/422 kontrol ediyor, 7/7 geçiyor.
-- Çalıştırma: `python -m uvicorn api:app --reload --app-dir src`
-
-## Açık işler (güncel)
-
-- [x] Gün 4: API sözleşmesi
-- [x] Gün 5: FastAPI endpoint + istemci testi
-- [ ] Gün 5: mentora LLM seçimi ve veri paylaşımı konusunu sor
-- [ ] Gün 12: `_triggered_rules`'a `rule_id` ekle (cache anahtarı için)
-- [ ] Gün 13: LLM cache + maliyet deneyi (cache kapalı/açık)
-- [ ] İsteğe bağlı: `log` ile z-score, yurtdışı + yüksek tutar bonusu
-- [ ] Sonra: projeye özel sanal ortam (`.venv`), şu an `base` kullanıyorum
-
-- [ ] API'ye LLM açıklamasını bağlarken: `reasons` boşsa LLM'i çağırma, sabit metin dön (model boş girdide kendi iç yorumunu sızdırıyor)
-- [ ] Gün 13: cache ayrıca cevap tutarlılığı sağlıyor (bu modelde `temperature` desteklenmiyor, aynı girdiye aynı cevap garanti değil)
-- [ ] Model seçimi: `MODEL` şu an Haiku 5.5. Maliyet deneyinde Sonnet ile cevap kalitesi karşılaştırması yap
-## Gün 6: LLM temelleri
-
-`src/llm_explain.py`: risk sonucunu (skor, etiket, nedenler) Claude'a verip 2-3 cümlelik Türkçe açıklama yazdırıyor. Model: Haiku 5.5 (maliyet nedeniyle). Anahtar `.env` dosyasında, git'e girmiyor.
-
-- **Token:** Örnek çağrıda girdi 215, çıktı 105 token. Maliyet bu sayılardan çıkıyor.
-- **System / user mesajı:** System mesajı modelin rolü ve kuralları (her çağrıda aynı), user mesajı işleme göre değişen kısım.
-- **Temperature:** Bu modelde desteklenmiyor (API 400 döndü), aynı girdiye aynı cümleler gelmiyor. Cevabı sabitlemenin yolu cache.
-- **Cevap blok listesi:** Cevap tek metin değil, bloklardan oluşuyor (düşünme bloğu olabiliyor). Sadece `type == "text"` olanları birleştiriyorum.
-- **Hallucination testi:** `reasons` boşken model neden uydurmadı, ama kendi iç yorumunu yazdı ("kullanıcı boş bırakmış"). Boş nedenlerde LLM'i çağırmayacağız, sabit metin dönecek.
-- **LLM henüz API'ye bağlı değil.** Entegrasyon Gün 12'de.
-
-## Gün 7: Embeddings
-
-`src/embedding_demo.py`: cümleleri vektöre çeviriyor (fastembed, çok dilli MiniLM, 384 boyut, bilgisayarda çalışıyor) ve cosine similarity ile karşılaştırıyor. Anthropic'in kendi embedding modeli yok, bu yüzden yerel model kullanıyorum. Claude hâlâ cevabı yazan model.
-
-Embedding, cümleyi anlamını temsil eden sayı listesine çevirir. RAG'de buna ihtiyaç var çünkü sorudaki kelimelerle belgedeki kelimeler çoğu zaman aynı olmuyor. Soruyu ve belge parçalarını vektöre çevirip anlamca en yakın parçaları buluyorum, sonra bu parçaları LLM'e verip cevap yazdırıyorum. Embedding bulur, Claude yazar.
-
-| Çift | Benzerlik |
-|---|---|
-| İngilizce ↔ Türkçe (aynı anlam) | 0.799 |
-| İngilizce ↔ İngilizce (International / Cross-border) | 0.717 |
-| Türkçe ↔ Cross-border | 0.756 |
-| Herhangi biri ↔ kafeterya | -0.09 ile -0.04 |
-
-- Model çok dilli, Türkçe ve İngilizce aynı anlamı eşliyor.
-- **Küçük metin farkları benzerliği oynatıyor:** Cümlenin sonuna nokta eklemek 0.690'ı 0.717'ye çıkardı. Belge metni temizliği önemli (Gün 8'de PDF'ten gelen bozuk boşluk ve kırık kelimeler).
-- 0.7 gibi kesin bir eşik yok, gerçek belgelerle Gün 10'da bakacağım.
-
-## Açık işler (güncel)
-
-- [x] Gün 6: LLM temelleri, `llm_explain.py`
-- [x] Gün 7: Embeddings, `embedding_demo.py`
-- [ ] Gün 8: PDF yükleme ve chunk'lama (belgeler: MASAK rehberi vb.)
-- [ ] 🟡 Gün 9'dan ÖNCE: projeye özel `.venv` oluştur (base'de anthropic, fastembed kurulumları paket çatışması uyarısı verdi)
-- [ ] LLM açıklamasını API'ye bağlarken: `reasons` boşsa LLM'i çağırma
-- [ ] Gün 12: `_triggered_rules`'a `rule_id` ekle
-- [ ] Gün 13: LLM cache ve maliyet deneyi (cache hem maliyet hem tutarlılık)
-- [ ] Maliyet deneyinde Haiku ile Sonnet'in cevap kalitesini karşılaştır
+Sahte istemcili testler Claude'un gerçek davranışını ölçmez, yalnız bizim kodumuzun doğru tepki verdiğini ölçer.
