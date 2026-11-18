@@ -48,6 +48,8 @@ ANTHROPIC_API_KEY=buraya_kendi_anahtarin
 uvicorn api:app --app-dir src
 ```
 
+**Analist paneli:** sunucu açıkken tarayıcıda `http://127.0.0.1:8000/panel` adresini aç. Tek bir HTML sayfası (`src/static/panel.html`). Yeni hesaplama yapmaz, aşağıdaki uçları tarayıcıdan çağırıp sonucu tablo olarak gösterir: işlem skorlama ve rehberden açıklama (`/predict-risk`, `/explain-risk`), müşteri inceleme (`/investigate`) ve alt satırda önbellek durumu.
+
 `--app-dir src` şart: kod `from risk_engine import ...` biçiminde, düz modül adlarıyla import ediyor. Sunucu açılırken Excel tabloları ve e5 modeli önceden yüklenir (`RAG_ISITMA=0` ile kapatılır). Etkileşimli dokümantasyon: `http://127.0.0.1:8000/docs`.
 
 | Uç nokta | Ne yapar | Claude kullanır mı |

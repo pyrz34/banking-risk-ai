@@ -1,0 +1,350 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banking Risk AI - Analist Paneli</title>
+<style>
+  * { box-sizing: border-box; }
+  body { margin: 0; font-family: Segoe UI, Arial, sans-serif; font-size: 15px; color: #111; background: #f2f2f2; }
+  header { background: #111; color: #fff; padding: 14px 24px; display: flex; justify-content: space-between; align-items: baseline; }
+  header h1 { margin: 0; font-size: 19px; font-weight: 600; }
+  header span { font-size: 13px; color: #bbb; }
+  nav { background: #fff; border-bottom: 1px solid #ccc; padding: 0 24px; }
+  nav button { background: none; border: none; border-bottom: 3px solid transparent; padding: 12px 16px; font-size: 15px; cursor: pointer; color: #555; }
+  nav button.secili { border-bottom-color: #111; color: #111; font-weight: 600; }
+  main { max-width: 1100px; margin: 20px auto; padding: 0 16px; }
+  .kutu { background: #fff; border: 1px solid #ccc; padding: 18px; margin-bottom: 16px; }
+  .kutu h2 { margin: 0 0 12px; font-size: 16px; }
+  .satir { display: flex; flex-wrap: wrap; gap: 14px; align-items: flex-end; }
+  label { display: flex; flex-direction: column; font-size: 13px; color: #444; gap: 4px; }
+  input, select { font-size: 15px; padding: 7px 8px; border: 1px solid #999; border-radius: 0; min-width: 130px; background: #fff; }
+  label.kutucuk { flex-direction: row; align-items: center; gap: 6px; padding-bottom: 8px; }
+  label.kutucuk input { min-width: 0; }
+  .dugme { font-size: 15px; padding: 8px 16px; border: 1px solid #111; background: #111; color: #fff; cursor: pointer; border-radius: 0; }
+  .dugme.ikincil { background: #fff; color: #111; }
+  .dugme:disabled { opacity: .5; cursor: wait; }
+  .ornekler { margin-top: 10px; font-size: 13px; color: #555; }
+  .ornekler button { font-size: 13px; padding: 3px 8px; border: 1px solid #999; background: #fff; cursor: pointer; margin-left: 4px; }
+  .gizli { display: none; }
+  .hata { border-color: #b00; color: #b00; }
+  .bilgi { color: #555; font-size: 13px; }
+  .skor-alan { display: flex; gap: 24px; align-items: center; flex-wrap: wrap; }
+  .skor { font-size: 44px; font-weight: 700; line-height: 1; }
+  .skor small { font-size: 16px; color: #777; font-weight: 400; }
+  .etiket { display: inline-block; padding: 4px 10px; font-size: 13px; font-weight: 600; border: 1px solid; }
+  .etiket.suspicious { color: #b00; border-color: #b00; background: #fdeeee; }
+  .etiket.normal { color: #1a6b2a; border-color: #1a6b2a; background: #eef7ef; }
+  .cubuk { position: relative; width: 320px; height: 14px; background: #e5e5e5; border: 1px solid #bbb; }
+  .cubuk div { height: 100%; background: #111; }
+  .cubuk .esik { position: absolute; top: -5px; bottom: -5px; left: 50%; width: 2px; background: #b00; }
+  .cubuk-yazi { font-size: 12px; color: #666; margin-top: 4px; }
+  table { border-collapse: collapse; width: 100%; font-size: 14px; }
+  th, td { border: 1px solid #ccc; padding: 6px 8px; text-align: left; vertical-align: top; }
+  th { background: #f5f5f5; font-weight: 600; }
+  td.sayi { text-align: right; white-space: nowrap; }
+  .kod { font-family: Consolas, monospace; font-size: 13px; background: #f0f0f0; padding: 1px 5px; }
+  .metin { white-space: pre-wrap; line-height: 1.55; }
+  .ozet-kartlar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .ozet-kartlar div { border: 1px solid #ccc; padding: 8px 10px; }
+  .ozet-kartlar b { display: block; font-size: 12px; color: #666; font-weight: 400; }
+  .rozet { display: inline-block; padding: 2px 8px; border: 1px solid #111; font-size: 13px; margin-right: 6px; }
+  .gecti { color: #1a6b2a; font-weight: 600; }
+  .kaldi { color: #b00; font-weight: 600; }
+  footer { max-width: 1100px; margin: 0 auto 24px; padding: 0 16px; font-size: 12px; color: #777; }
+  @media (max-width: 600px) { .cubuk { width: 100%; } header { flex-direction: column; } }
+</style>
+</head>
+<body>
+<header>
+  <h1>Banking Risk AI - Analist Paneli</h1>
+  <span>Sentetik veri, proof-of-concept. Kararı analist verir.</span>
+</header>
+<nav>
+  <button id="sekme-islem" class="secili" onclick="sekmeAc('islem')">İşlem skorlama</button>
+  <button id="sekme-musteri" onclick="sekmeAc('musteri')">Müşteri inceleme</button>
+</nav>
+
+<main>
+  <!-- ============ 1) İŞLEM SKORLAMA: /predict-risk ve /explain-risk ============ -->
+  <section id="bolum-islem">
+    <div class="kutu">
+      <h2>İşlem bilgisi</h2>
+      <div class="satir">
+        <label>Hesap no (account_id)<input id="account_id" type="number" min="1" value="2"></label>
+        <label>Tutar<input id="amount" type="number" min="0" step="0.01" value="14717"></label>
+        <label>Durum<select id="status"><option>OK</option><option>FAILED</option></select></label>
+        <label>Kanal<select id="channel"><option>Web</option><option>Mobile</option><option>ATM</option><option>Branch</option></select></label>
+        <label class="kutucuk"><input id="is_international" type="checkbox" checked> Yurtdışı işlem</label>
+      </div>
+      <div class="satir" style="margin-top:14px">
+        <button class="dugme" id="btn-skorla" onclick="skorla(false)">Skorla</button>
+        <button class="dugme ikincil" id="btn-acikla" onclick="skorla(true)">Skorla ve rehberden açıkla</button>
+      </div>
+      <div class="ornekler">Hazır örnek:
+        <button onclick="ornek(1, 100, 'OK', 'ATM', 0)">Normal işlem</button>
+        <button onclick="ornek(2, 14717, 'OK', 'Web', 1)">Riskli işlem</button>
+      </div>
+    </div>
+
+    <div id="islem-hata" class="kutu hata gizli"></div>
+
+    <div id="islem-sonuc" class="gizli">
+      <div class="kutu">
+        <h2>Risk sonucu</h2>
+        <div class="skor-alan">
+          <div class="skor"><span id="skor"></span><small> / 100</small></div>
+          <div>
+            <div class="cubuk"><div id="skor-cubuk"></div><span class="esik" title="Eşik: 50"></span></div>
+            <div class="cubuk-yazi">Kırmızı çizgi eşik (50). 50 ve üstü şüpheli.</div>
+          </div>
+          <span id="etiket" class="etiket"></span>
+        </div>
+        <h2 style="margin-top:18px">Tetiklenen kurallar</h2>
+        <div id="kurallar"></div>
+      </div>
+
+      <div id="aciklama-kutu" class="kutu gizli">
+        <h2>Rehbere dayalı açıklama</h2>
+        <div id="llm-bilgi" class="bilgi" style="margin-bottom:8px"></div>
+        <div id="aciklama" class="metin"></div>
+        <h2 style="margin-top:18px">Kullanılan MASAK rehberi parçaları</h2>
+        <div id="kaynaklar"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============ 2) MÜŞTERİ İNCELEME: /investigate ============ -->
+  <section id="bolum-musteri" class="gizli">
+    <div class="kutu">
+      <h2>Müşteri incelemesi</h2>
+      <div class="satir">
+        <label>Müşteri no (customer_id)<input id="customer_id" type="number" min="1" value="1"></label>
+        <label class="kutucuk"><input id="yenile" type="checkbox"> Önbelleği atla (yeniden üret)</label>
+        <button class="dugme" id="btn-incele" onclick="incele()">İncele</button>
+      </div>
+      <div class="bilgi" style="margin-top:10px">Ajan Claude'u dört araçla çalıştırır; ilk çağrı yaklaşık 15 sn sürebilir. Aynı müşteri ikinci kez önbellekten gelir.</div>
+    </div>
+
+    <div id="musteri-hata" class="kutu hata gizli"></div>
+    <div id="musteri-bekle" class="kutu gizli">İnceleniyor, lütfen bekleyin...</div>
+
+    <div id="musteri-sonuc" class="gizli">
+      <div class="kutu">
+        <h2>Müşteri özeti</h2>
+        <div id="musteri-ozet" class="ozet-kartlar"></div>
+      </div>
+      <div class="kutu">
+        <h2>En riskli 3 işlem (veri katmanından, Claude'dan bağımsız)</h2>
+        <div id="riskli-islemler"></div>
+      </div>
+      <div class="kutu">
+        <h2>İnceleme raporu</h2>
+        <div id="rapor-bilgi" style="margin-bottom:10px"></div>
+        <div id="rapor" class="metin"></div>
+      </div>
+      <div class="kutu" id="dogrulama-kutu">
+        <h2>Otomatik kontroller (kaba ipucu, kanıt değil)</h2>
+        <div id="dogrulama"></div>
+      </div>
+      <div class="kutu" id="uyari-kutu">
+        <h2>Uyarılar</h2>
+        <div id="uyarilar"></div>
+      </div>
+      <div class="kutu" id="iz-kutu">
+        <h2>Ajanın izi</h2>
+        <div id="iz"></div>
+      </div>
+    </div>
+  </section>
+</main>
+<footer id="onbellek-satiri"></footer>
+
+<script>
+// Bu sayfa yeni bir hesaplama yapmaz. Sadece mevcut API uçlarını (aynı sunucu) çağırıp sonucu gösterir.
+
+function $(id) { return document.getElementById(id); }
+
+// Sunucudan gelen metni HTML olarak değil düz metin olarak basmak için (Claude'un yazdığı metin dahil).
+function kacis(s) {
+  return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+}
+
+// Rapordaki **kalın** başlıkları kalın göster; geri kalanı düz metin.
+function kalinYap(s) {
+  return kacis(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+}
+
+function sekmeAc(ad) {
+  for (const b of ["islem", "musteri"]) {
+    $("bolum-" + b).classList.toggle("gizli", b !== ad);
+    $("sekme-" + b).classList.toggle("secili", b === ad);
+  }
+}
+
+function goster(id, acik) { $(id).classList.toggle("gizli", !acik); }
+
+// FastAPI hata gövdesini okunur metne çevirir (404: detail metin, 422: detail liste).
+async function istek(yol, govde) {
+  const cevap = await fetch(yol, govde === undefined ? {} : {
+    method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(govde)
+  });
+  const veri = await cevap.json().catch(() => ({}));
+  if (!cevap.ok) {
+    let detay = veri.detail;
+    if (Array.isArray(detay)) detay = detay.map(d => (d.loc || []).slice(1).join(".") + ": " + d.msg).join("; ");
+    throw new Error("Hata " + cevap.status + ": " + (detay || "bilinmeyen hata"));
+  }
+  return veri;
+}
+
+function ornek(hesap, tutar, durum, kanal, yurtdisi) {
+  $("account_id").value = hesap; $("amount").value = tutar; $("status").value = durum;
+  $("channel").value = kanal; $("is_international").checked = yurtdisi === 1;
+}
+
+// ---------------- İşlem skorlama ----------------
+async function skorla(aciklamaIste) {
+  const govde = {
+    account_id: parseInt($("account_id").value, 10),
+    amount: parseFloat($("amount").value),
+    status: $("status").value,
+    channel: $("channel").value,
+    is_international: $("is_international").checked ? 1 : 0,
+  };
+  const dugmeler = [$("btn-skorla"), $("btn-acikla")];
+  dugmeler.forEach(b => b.disabled = true);
+  goster("islem-hata", false);
+  try {
+    const r = await istek(aciklamaIste ? "/explain-risk" : "/predict-risk", govde);
+    riskGoster(r);
+    goster("aciklama-kutu", aciklamaIste);
+    if (aciklamaIste) aciklamaGoster(r);
+    goster("islem-sonuc", true);
+    onbellekYukle();
+  } catch (e) {
+    $("islem-hata").textContent = e.message;
+    goster("islem-hata", true);
+    goster("islem-sonuc", false);
+  } finally {
+    dugmeler.forEach(b => b.disabled = false);
+  }
+}
+
+function riskGoster(r) {
+  $("skor").textContent = r.risk_score;
+  $("skor-cubuk").style.width = Math.min(r.risk_score, 100) + "%";
+  $("etiket").textContent = r.risk_label === "suspicious" ? "ŞÜPHELİ (suspicious)" : "NORMAL";
+  $("etiket").className = "etiket " + r.risk_label;
+  if (!r.reasons.length) {
+    $("kurallar").innerHTML = '<div class="bilgi">Hiçbir kural tetiklenmedi.</div>';
+    return;
+  }
+  let h = "<table><tr><th>Kural</th><th>Neden (puan)</th></tr>";
+  r.reasons.forEach((neden, i) => {
+    h += `<tr><td><span class="kod">${kacis(r.rule_ids[i] || "")}</span></td><td>${kacis(neden)}</td></tr>`;
+  });
+  $("kurallar").innerHTML = h + "</table>";
+}
+
+function aciklamaGoster(r) {
+  $("llm-bilgi").textContent = r.llm_used
+    ? "Bu açıklamayı Claude, yalnızca aşağıdaki rehber parçalarına dayanarak yazdı. [n] işaretleri parça numarasıdır."
+    : "Claude çağrılmadı (kural tetiklenmediyse ya da açıklama üretilemediyse). Risk sonucu yine geçerlidir.";
+  $("aciklama").innerHTML = kacis(r.explanation);
+  if (!r.policy_sources.length) {
+    $("kaynaklar").innerHTML = '<div class="bilgi">Kaynak yok.</div>';
+    return;
+  }
+  let h = "<table><tr><th>No</th><th>Sayfa</th><th>Kodlar</th><th>Benzerlik</th><th>Cevapta atıf yapıldı mı</th></tr>";
+  for (const k of r.policy_sources) {
+    h += `<tr><td class="sayi">[${k.no}]</td><td class="sayi">s. ${k.sayfa}</td><td>${kacis(k.kodlar.join(", ") || "-")}</td>` +
+         `<td class="sayi">${k.skor.toFixed(3)}</td><td>${k.atif_edildi ? '<span class="gecti">Evet</span>' : "Hayır"}</td></tr>`;
+  }
+  $("kaynaklar").innerHTML = h + "</table>";
+}
+
+// ---------------- Müşteri inceleme ----------------
+async function incele() {
+  const id = parseInt($("customer_id").value, 10);
+  const yol = "/investigate" + ($("yenile").checked ? "?yenile=true" : "");
+  $("btn-incele").disabled = true;
+  goster("musteri-hata", false); goster("musteri-sonuc", false); goster("musteri-bekle", true);
+  try {
+    const r = await istek(yol, { customer_id: id });
+    incelemeGoster(r);
+    goster("musteri-sonuc", true);
+    onbellekYukle();
+  } catch (e) {
+    $("musteri-hata").textContent = e.message;
+    goster("musteri-hata", true);
+  } finally {
+    goster("musteri-bekle", false);
+    $("btn-incele").disabled = false;
+  }
+}
+
+const KAYNAK_ADI = {
+  ajan: "Ajan raporu",
+  aciklama: "Ajan çalışmadı: en riskli işlemin kural tabanlı açıklaması",
+  yok: "Rapor üretilemedi: yalnız veri gösteriliyor",
+};
+
+function incelemeGoster(r) {
+  const m = r.musteri;
+  const kartlar = [["Müşteri no", r.customer_id], ["Segment", m.segment], ["Şehir", m.city], ["Risk bandı", m.risk_band],
+                   ["Kayıt tarihi", m.onboard_date], ["Hesap sayısı", m.hesap_sayisi], ["Toplam işlem", m.toplam_islem]];
+  $("musteri-ozet").innerHTML = kartlar.map(([a, d]) => `<div><b>${a}</b>${kacis(d)}</div>`).join("");
+
+  let h = "<table><tr><th>İşlem no</th><th>Zaman</th><th>Kanal</th><th>Tür</th><th>Tutar</th><th>Karşı ülke</th>" +
+          "<th>Durum</th><th>Skor</th><th>Kurallar</th></tr>";
+  for (const t of r.en_riskli_islemler) {
+    h += `<tr><td class="sayi">${t.txn_id}</td><td>${kacis(t.txn_time)}</td><td>${kacis(t.channel)}</td><td>${kacis(t.txn_type)}</td>` +
+         `<td class="sayi">${t.amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</td><td>${kacis(t.counterparty_country)}</td>` +
+         `<td>${kacis(t.status)}</td><td class="sayi"><span class="etiket ${t.risk_label}">${t.risk_score}</span></td>` +
+         `<td>${t.rule_ids.map(k => `<span class="kod">${kacis(k)}</span>`).join(" ") || "-"}</td></tr>`;
+  }
+  $("riskli-islemler").innerHTML = r.en_riskli_islemler.length ? h + "</table>" : '<div class="bilgi">İşlem yok.</div>';
+
+  $("rapor-bilgi").innerHTML = `<span class="rozet">${kacis(KAYNAK_ADI[r.rapor_kaynagi] || r.rapor_kaynagi)}</span>` +
+    (r.onbellekten ? '<span class="rozet">Önbellekten</span>' : "") +
+    `<span class="bilgi">Süre: ${(r.sure_ms / 1000).toFixed(1)} sn</span>`;
+  $("rapor").innerHTML = r.rapor ? kalinYap(r.rapor) : '<span class="bilgi">Rapor yok.</span>';
+
+  goster("dogrulama-kutu", r.dogrulama.length > 0);
+  $("dogrulama").innerHTML = "<table><tr><th>Kontrol</th><th>Sonuç</th><th>Detay</th></tr>" +
+    r.dogrulama.map(d => `<tr><td><span class="kod">${kacis(d.kontrol)}</span></td>` +
+      `<td>${d.gecti ? '<span class="gecti">Geçti</span>' : '<span class="kaldi">Kaldı</span>'}</td><td>${kacis(d.detay)}</td></tr>`).join("") +
+    "</table>";
+
+  goster("uyari-kutu", r.uyarilar.length > 0);
+  $("uyarilar").innerHTML = "<ul>" + r.uyarilar.map(u => `<li>${kacis(u)}</li>`).join("") + "</ul>";
+
+  goster("iz-kutu", !!r.iz_ozeti);
+  if (r.iz_ozeti) {
+    const iz = r.iz_ozeti;
+    $("iz").innerHTML = `<div class="ozet-kartlar">
+      <div><b>Bitiş</b>${kacis(iz.bitis)}</div>
+      <div><b>Girdi token</b>${iz.girdi_token.toLocaleString("tr-TR")}</div>
+      <div><b>Çıktı token</b>${iz.cikti_token.toLocaleString("tr-TR")}</div>
+      ${iz.sure_ms != null ? `<div><b>Ajan süresi</b>${(iz.sure_ms / 1000).toFixed(1)} sn</div>` : ""}
+    </div>
+    <p><b>Araç sırası:</b> ${iz.arac_sirasi.map(a => `<span class="kod">${kacis(a)}</span>`).join(" &rarr; ") || "-"}</p>`;
+  }
+}
+
+// ---------------- Alt satır: önbellek durumu ----------------
+async function onbellekYukle() {
+  try {
+    const d = await istek("/onbellek-durumu");
+    const yaz = (ad, o) => `${ad}: ${o.isabet} isabet, ${o.iska} ıska, ${o.boyut}/${o.maks_boyut} kayıt`;
+    $("onbellek-satiri").textContent = "Önbellek (sunucu açıldığından beri): " +
+      yaz("açıklama", d.aciklama) + " | " + yaz("inceleme raporu", d.rapor);
+  } catch (e) {
+    $("onbellek-satiri").textContent = "";
+  }
+}
+onbellekYukle();
+</script>
+</body>
+</html>
