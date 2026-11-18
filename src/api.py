@@ -7,11 +7,13 @@ from typing import Literal, Optional
 
 import pandas as pd
 from fastapi import FastAPI, HTTPException
+from fastapi.responses import FileResponse
 from pydantic import BaseModel, Field, StrictInt
 
 from risk_engine import BASE_DIR, VERI_DOSYASI, RiskEngine
 
 ONBELLEK_DOSYASI = os.path.join(BASE_DIR, "data", "api_onbellek.pkl")
+PANEL_DOSYASI = os.path.join(BASE_DIR, "src", "static", "panel.html")
 logger = logging.getLogger("risk_api")
 
 
@@ -147,6 +149,12 @@ referans = referans_verisi_yukle()  # sunucu açılırken bir kez
 @app.get("/")
 def ana_sayfa():
     return {"mesaj": "Risk Engine API'ye hoş geldiniz!"}
+
+
+@app.get("/panel", include_in_schema=False)
+def panel():
+    """Analist paneli: tek HTML sayfası. Yeni hesaplama yapmaz, tarayıcıdan aşağıdaki uçları çağırır."""
+    return FileResponse(PANEL_DOSYASI)
 
 
 def risk_hesapla(islem):
