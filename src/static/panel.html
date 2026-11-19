@@ -45,6 +45,17 @@
   td.sayi { text-align: right; white-space: nowrap; }
   .kod { font-family: Consolas, monospace; font-size: 13px; background: #f0f0f0; padding: 1px 5px; }
   .metin { white-space: pre-wrap; line-height: 1.55; }
+  /* Claude'un markdown raporu: düz HTML'e çevrilmiş hali */
+  .md { line-height: 1.6; max-width: 820px; }
+  .md h3 { font-size: 15px; margin: 18px 0 6px; padding-bottom: 4px; border-bottom: 1px solid #ddd; }
+  .md h3:first-child { margin-top: 0; }
+  .md p { margin: 6px 0; }
+  .md ul, .md ol { margin: 6px 0; padding-left: 24px; }
+  .md li { margin: 4px 0; }
+  .md code { font-family: Consolas, monospace; font-size: 13px; background: #f0f0f0; padding: 1px 4px; }
+  .not { border-left: 4px solid #111; background: #f7f7f7; padding: 10px 12px; font-size: 14px; line-height: 1.5; margin-bottom: 12px; }
+  .not b { font-weight: 600; }
+  .puan { color: #666; font-size: 12px; }
   .ozet-kartlar { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
   .ozet-kartlar div { border: 1px solid #ccc; padding: 8px 10px; }
   .ozet-kartlar b { display: block; font-size: 12px; color: #666; font-weight: 400; }
@@ -133,15 +144,19 @@
       <div class="kutu">
         <h2>Müşteri özeti</h2>
         <div id="musteri-ozet" class="ozet-kartlar"></div>
+        <div class="bilgi" style="margin-top:8px">Risk bandı müşterinin kayıtlı profil bilgisidir (low / med / high). Aşağıdaki işlem skorlarından hesaplanmaz.</div>
       </div>
       <div class="kutu">
         <h2>En riskli 3 işlem (veri katmanından, Claude'dan bağımsız)</h2>
+        <div class="not"><b>Skor müşterinin değil, her işlemin kendi skorudur.</b> Müşterinin tüm işlemleri tek tek skorlanır,
+          en yüksek 3'ü burada listelenir; bu yüzden aynı müşteride 70, 45, 40 gibi farklı skorlar görmek normaldir.
+          Skor, tetiklenen kuralların puanları toplamıdır (en çok 100). 50 ve üstü şüpheli sayılır.</div>
         <div id="riskli-islemler"></div>
       </div>
       <div class="kutu">
         <h2>İnceleme raporu</h2>
         <div id="rapor-bilgi" style="margin-bottom:10px"></div>
-        <div id="rapor" class="metin"></div>
+        <div id="rapor" class="md"></div>
       </div>
       <div class="kutu" id="dogrulama-kutu">
         <h2>Otomatik kontroller (kaba ipucu, kanıt değil)</h2>
@@ -170,9 +185,53 @@ function kacis(s) {
   return String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
 }
 
-// Rapordaki **kalın** başlıkları kalın göster; geri kalanı düz metin.
-function kalinYap(s) {
-  return kacis(s).replace(/\*\*(.+?)\*\*/g, "<b>$1</b>");
+// Satır içi biçim: **kalın**, *italik*, `kod`. Girdi önceden kacis() ile kaçırılmış olmalı.
+function satirIci(s) {
+  return s
+    .replace(/`([^`]+)`/g, "<code>$1</code>")
+    .replace(/\*\*(.+?)\*\*/g, "<b>$1</b>")
+    .replace(/(^|[^*])\*([^*\s][^*]*?)\*(?!\*)/g, "$1<i>$2</i>");
+}
+
+// Claude'un yazdığı markdown'ı (başlık, madde, numaralı liste, kalın) okunur HTML'e çevirir.
+// Güvenlik: metin ÖNCE kacis() ile kaçırılır, sonra yalnızca bizim ürettiğimiz birkaç etiket eklenir.
+// Böylece metinde <script> gibi bir şey olsa bile ekrana yazı olarak çıkar, çalışmaz. Harici kütüphane yok.
+function markdownHtml(metin) {
+  const satirlar = kacis(metin).replace(/\r\n/g, "\n").split("\n");
+  let html = "", liste = null;  // liste: açık olan "ul" ya da "ol"
+  const listeKapat = () => { if (liste) { html += `</${liste}>`; liste = null; } };
+  for (const ham of satirlar) {
+    const s = ham.trim();
+    let m;
+    if (!s) { listeKapat(); continue; }
+    if ((m = s.match(/^#{1,6}\s+(.*)$/))) {                 // # Başlık
+      listeKapat(); html += `<h3>${satirIci(m[1])}</h3>`;
+    } else if ((m = s.match(/^\*\*([^*]+?)\*\*:?\s*$/))) {    // satırın tamamı **Başlık**
+      listeKapat(); html += `<h3>${satirIci(m[1].trim())}</h3>`;
+    } else if ((m = s.match(/^\*\*([^*]+?)\*\*:\s+(.+)$/))) { // **Başlık**: aynı satırda metin
+      listeKapat(); html += `<h3>${satirIci(m[1].trim())}</h3><p>${satirIci(m[2])}</p>`;
+    } else if ((m = s.match(/^[-*•]\s+(.*)$/))) {           // - madde
+      if (liste !== "ul") { listeKapat(); html += "<ul>"; liste = "ul"; }
+      html += `<li>${satirIci(m[1])}</li>`;
+    } else if ((m = s.match(/^\d+[.)]\s+(.*)$/))) {          // 1. madde
+      if (liste !== "ol") { listeKapat(); html += "<ol>"; liste = "ol"; }
+      html += `<li>${satirIci(m[1])}</li>`;
+    } else {
+      listeKapat(); html += `<p>${satirIci(s)}</p>`;
+    }
+  }
+  listeKapat();
+  return html;
+}
+
+// Kural puanları: src/risk_engine.py içindeki _triggered_rules ile aynı. API puanı ayrıca döndürmediği için burada yazılı.
+// Toplam skorla tutmazsa (ör. 100 sınırı) döküm gösterilmez, yanlış bilgi verilmez.
+const KURAL_PUANI = { FAILED_TX: 30, RISKY_CHANNEL: 15, INTERNATIONAL: 25, AMOUNT_ANOMALY: 30 };
+function skorDokumu(t) {
+  const puanlar = t.rule_ids.map(k => KURAL_PUANI[k]);
+  if (!puanlar.length || puanlar.some(p => p === undefined)) return "";
+  const toplam = puanlar.reduce((a, b) => a + b, 0);
+  return toplam === t.risk_score ? `<div class="puan">${puanlar.join(" + ")} = ${toplam}</div>` : "";
 }
 
 function sekmeAc(ad) {
@@ -292,24 +351,26 @@ const KAYNAK_ADI = {
 
 function incelemeGoster(r) {
   const m = r.musteri;
-  const kartlar = [["Müşteri no", r.customer_id], ["Segment", m.segment], ["Şehir", m.city], ["Risk bandı", m.risk_band],
+  const kartlar = [["Müşteri no", r.customer_id], ["Segment", m.segment], ["Şehir", m.city], ["Risk bandı (profil)", m.risk_band],
                    ["Kayıt tarihi", m.onboard_date], ["Hesap sayısı", m.hesap_sayisi], ["Toplam işlem", m.toplam_islem]];
   $("musteri-ozet").innerHTML = kartlar.map(([a, d]) => `<div><b>${a}</b>${kacis(d)}</div>`).join("");
 
   let h = "<table><tr><th>İşlem no</th><th>Zaman</th><th>Kanal</th><th>Tür</th><th>Tutar</th><th>Karşı ülke</th>" +
-          "<th>Durum</th><th>Skor</th><th>Kurallar</th></tr>";
+          "<th>Durum</th><th>İşlem skoru</th><th>Kurallar (puan)</th></tr>";
   for (const t of r.en_riskli_islemler) {
     h += `<tr><td class="sayi">${t.txn_id}</td><td>${kacis(t.txn_time)}</td><td>${kacis(t.channel)}</td><td>${kacis(t.txn_type)}</td>` +
          `<td class="sayi">${t.amount.toLocaleString("tr-TR", { minimumFractionDigits: 2 })}</td><td>${kacis(t.counterparty_country)}</td>` +
-         `<td>${kacis(t.status)}</td><td class="sayi"><span class="etiket ${t.risk_label}">${t.risk_score}</span></td>` +
-         `<td>${t.rule_ids.map(k => `<span class="kod">${kacis(k)}</span>`).join(" ") || "-"}</td></tr>`;
+         `<td>${kacis(t.status)}</td>` +
+         (t.risk_score == null ? `<td class="sayi">-</td>`
+           : `<td class="sayi"><span class="etiket ${kacis(t.risk_label)}">${t.risk_score}</span>${skorDokumu(t)}</td>`) +
+         `<td>${t.rule_ids.map(k => `<span class="kod">${kacis(k)}${KURAL_PUANI[k] ? " +" + KURAL_PUANI[k] : ""}</span>`).join(" ") || "-"}</td></tr>`;
   }
   $("riskli-islemler").innerHTML = r.en_riskli_islemler.length ? h + "</table>" : '<div class="bilgi">İşlem yok.</div>';
 
   $("rapor-bilgi").innerHTML = `<span class="rozet">${kacis(KAYNAK_ADI[r.rapor_kaynagi] || r.rapor_kaynagi)}</span>` +
     (r.onbellekten ? '<span class="rozet">Önbellekten</span>' : "") +
     `<span class="bilgi">Süre: ${(r.sure_ms / 1000).toFixed(1)} sn</span>`;
-  $("rapor").innerHTML = r.rapor ? kalinYap(r.rapor) : '<span class="bilgi">Rapor yok.</span>';
+  $("rapor").innerHTML = r.rapor ? markdownHtml(r.rapor) : '<span class="bilgi">Rapor yok.</span>';
 
   goster("dogrulama-kutu", r.dogrulama.length > 0);
   $("dogrulama").innerHTML = "<table><tr><th>Kontrol</th><th>Sonuç</th><th>Detay</th></tr>" +
